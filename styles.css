@@ -138,21 +138,6 @@ input {
   white-space: nowrap;
 }
 
-/* Hint de atalhos: pointer-events: none deixa pintar qualquer região da tela,
-   inclusive esta faixa (antes o <p> interceptava o pointerdown no canvas). */
-.hint {
-  position: fixed;
-  bottom: var(--space-3);
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  max-width: min(70ch, calc(100vw - var(--space-6)));
-  color: var(--text-faint);
-  font-size: var(--fs-xs);
-  text-align: center;
-  pointer-events: none;
-}
-
 /* ---- Painéis flutuantes criados por src/windows.js ---- */
 .window {
   position: fixed;

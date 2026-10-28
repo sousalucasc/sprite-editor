@@ -2,7 +2,6 @@
 import { createDoc, undo, redo, onChange, strokeSummary } from './state.js';
 import { createRenderer } from './canvas.js';
 import { createPencil } from './pencil.js';
-import { createWindow, MAX_LEVEL } from './windows.js';
 import { createFloatingToolbar } from './toolbar.js';
 import { createHistoryWindow } from './history.js';
 import { createLayersWindow } from './layers.js';
@@ -22,7 +21,6 @@ const ui = {
   bucket: document.querySelector('#tool-bucket'),
   dropper: document.querySelector('#tool-dropper'),
   winColor: document.querySelector('#win-color'),
-  winDemo: document.querySelector('#win-demo'),
   winHistory: document.querySelector('#win-history'),
   winLayers: document.querySelector('#win-layers'),
   winTimeline: document.querySelector('#win-timeline'),
@@ -54,40 +52,6 @@ color.subscribe(() => pencil.setColor(color.rgba()));
 view.setTool(pencil);
 
 const toolbar = createFloatingToolbar(ui.toolbar);
-
-// Painel de exemplo: demonstra arraste pelo cabeçalho, abrir/fechar e aninhamento.
-function buildDemoBody(body, win) {
-  const info = document.createElement('p');
-  info.className = 'window-note';
-  info.textContent = `Nível ${win.level} de ${MAX_LEVEL} · arraste pelo cabeçalho.`;
-  body.append(info);
-  if (win.canOpenChild()) {
-    const btn = document.createElement('button');
-    btn.textContent = 'Abrir sub-painel';
-    btn.addEventListener('click', () => win.openChild(), { signal: win.signal });
-    body.append(btn);
-  } else {
-    const max = document.createElement('p');
-    max.className = 'window-note';
-    max.textContent = 'Limite de 3 níveis atingido.';
-    body.append(max);
-  }
-}
-
-const demo = createWindow({
-  title: 'Painel de exemplo',
-  x: window.innerWidth - 240,
-  y: 56,
-  onBody: buildDemoBody,
-  onOpen: () => ui.winDemo.setAttribute('aria-pressed', 'true'),
-  onClose: () => ui.winDemo.setAttribute('aria-pressed', 'false'),
-});
-demo.open();
-
-ui.winDemo.addEventListener('click', () => {
-  if (demo.isOpen()) demo.close();
-  else demo.open();
-});
 
 // Painel do histórico: lista os strokes (diffs) e permite saltar para qualquer ponto.
 const history = createHistoryWindow(doc, {
@@ -301,7 +265,6 @@ window.addEventListener('keydown', (ev) => {
 window.addEventListener('pagehide', () => {
   view.destroy();
   toolbar.destroy();
-  demo.destroy();
   history.destroy();
   layers.destroy();
   timeline.destroy(); // fecha a janela → abort da signal → playback.stop()
