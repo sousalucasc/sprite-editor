@@ -23,13 +23,16 @@ export function place(el, x, y) {
 
 // Arrasta `el` quando o pointerdown cai em `handle`. Os listeners de arraste vivem só
 // durante o arraste (um AbortController por arraste, abortado no pointerup/cancel).
-export function createDraggable(el, handle, { reject } = {}) {
+// `onStart` é chamado no início de cada arraste: windows.js usa para marcar `moved`
+// (o layout de spawn não reposiciona painéis que o usuário moveu).
+export function createDraggable(el, handle, { reject, onStart } = {}) {
   const life = new AbortController();
   handle.addEventListener(
     'pointerdown',
     (ev) => {
       if (ev.button !== 0) return;
       if (reject?.(ev.target)) return;
+      onStart?.(ev);
       ev.preventDefault(); // não seleciona texto do cabeçalho/fundo
       if (ev.isTrusted) handle.setPointerCapture(ev.pointerId);
       const rect = el.getBoundingClientRect();
@@ -50,12 +53,12 @@ export function createDraggable(el, handle, { reject } = {}) {
   return { destroy() { life.abort(); } };
 }
 
-export function createWindow({ title, x = MARGIN, y = MARGIN, parent = null, onBody, onOpen, onClose } = {}) {
+export function createWindow({ title, x = MARGIN, y = MARGIN, parent = null, onBody, onOpen, onClose, getPos } = {}) {
   const level = parent ? parent.level + 1 : 1;
   if (level > MAX_LEVEL) throw new Error(`aninhamento máximo de ${MAX_LEVEL} níveis`);
 
   const el = document.createElement('div');
-  el.className = 'window';
+  el.className = level > 1 ? 'window window--nested' : 'window';
   el.hidden = true;
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-label', title);
@@ -63,11 +66,13 @@ export function createWindow({ title, x = MARGIN, y = MARGIN, parent = null, onB
   const header = document.createElement('div');
   header.className = 'window-header';
   const label = document.createElement('span');
+  label.className = 'window-title';
   label.textContent = title;
   const badge = document.createElement('span');
   badge.className = 'window-level';
   badge.textContent = `${level}/${MAX_LEVEL}`;
   const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
   closeBtn.className = 'window-close';
   closeBtn.textContent = '×';
   closeBtn.title = 'Fechar';
@@ -80,7 +85,10 @@ export function createWindow({ title, x = MARGIN, y = MARGIN, parent = null, onB
   document.body.append(el);
 
   const life = new AbortController();
-  const drag = createDraggable(el, header, { reject: (t) => t.closest('button') });
+  const drag = createDraggable(el, header, {
+    reject: (t) => t.closest('button'),
+    onStart: () => { el.dataset.moved = 'true'; }, // o layout não mexe em painel movido
+  });
   el.addEventListener('pointerdown', () => {
     el.style.zIndex = String(++zTop);
   }, { signal: life.signal });
@@ -101,7 +109,12 @@ export function createWindow({ title, x = MARGIN, y = MARGIN, parent = null, onB
     closeBtn.addEventListener('click', close, { signal: session.signal });
     body.textContent = '';
     onBody?.(body, api);
-    place(el, x, y);
+    // Spawn default: `getPos` (src/layout.js) calcula a posição na faixa livre; sem ela,
+    // usa x/y. Reabrir sempre volta para o layout padrão — o flag `moved` do arraste é
+    // resetado aqui e re-setado no próximo arraste.
+    delete el.dataset.moved;
+    const pos = getPos ? getPos(el) : { x, y };
+    place(el, pos.x, pos.y);
     onOpen?.();
   }
 

@@ -113,27 +113,31 @@ export function createPlayback(doc, { fps = DEFAULT_FPS } = {}) {
 
 // A janela é só a UI: o estado do playback está no controller, o do onion está no render
 // (view), então fechar/reabrir a janela não perde nada essencial.
-export function createTimelineWindow(doc, playback, view, { x = 12, y = window.innerHeight - 240, onOpen, onClose } = {}) {
+export function createTimelineWindow(doc, playback, view, { x = 12, y = window.innerHeight - 240, getPos, onOpen, onClose } = {}) {
   function build(body, win) {
     const note = document.createElement('p');
     note.className = 'window-note';
 
     const controls = document.createElement('div');
-    controls.className = 'tl-controls';
+    controls.className = 'tl-actions';
 
     const addBtn = document.createElement('button');
-    addBtn.textContent = 'Frame';
+    addBtn.type = 'button';
+    addBtn.textContent = 'Novo frame';
     addBtn.title = 'Novo frame vazio (herda as camadas do frame ativo)';
 
     const dupBtn = document.createElement('button');
+    dupBtn.type = 'button';
     dupBtn.textContent = 'Duplicar';
     dupBtn.title = 'Duplicar o frame ativo (copia os pixels)';
 
     const playBtn = document.createElement('button');
+    playBtn.type = 'button';
     playBtn.className = 'tl-play';
     playBtn.textContent = '▶';
     playBtn.setAttribute('aria-pressed', 'false');
     playBtn.title = 'Playback da animação (A)';
+    playBtn.setAttribute('aria-label', 'Tocar a animação');
 
     const fpsInput = document.createElement('input');
     fpsInput.type = 'range';
@@ -145,16 +149,27 @@ export function createTimelineWindow(doc, playback, view, { x = 12, y = window.i
     const fpsVal = document.createElement('span');
     fpsVal.className = 'tl-val';
 
-    controls.append(addBtn, dupBtn, playBtn, fpsInput, fpsVal);
+    const fpsLabel = document.createElement('span');
+    fpsLabel.className = 'field-label';
+    fpsLabel.textContent = 'FPS';
+    const fpsRow = document.createElement('label');
+    fpsRow.className = 'tl-row';
+    fpsRow.append(fpsLabel, fpsInput, fpsVal);
+
+    controls.append(addBtn, dupBtn, playBtn);
 
     // Onion skin: os vizinhos do frame ativo, tingidos (anterior quente, próximo frio).
-    const onionRow = document.createElement('label');
-    onionRow.className = 'option-row';
+    const onionToggle = document.createElement('label');
+    onionToggle.className = 'tl-toggle';
     const onionCheck = document.createElement('input');
     onionCheck.type = 'checkbox';
     onionCheck.title = 'Onion skin (frames vizinhos)';
     const onionLabel = document.createElement('span');
-    onionLabel.textContent = 'onion';
+    onionLabel.textContent = 'Onion skin';
+    onionToggle.append(onionCheck, onionLabel);
+
+    const onionBox = document.createElement('div');
+    onionBox.className = 'tl-onion';
     const ghostCount = document.createElement('input');
     ghostCount.type = 'range';
     ghostCount.min = '1';
@@ -162,6 +177,15 @@ export function createTimelineWindow(doc, playback, view, { x = 12, y = window.i
     ghostCount.step = '1';
     ghostCount.className = 'tl-range';
     ghostCount.title = 'Frames fantasma (anterior e próximo)';
+    const ghostVal = document.createElement('span');
+    ghostVal.className = 'tl-val';
+    const ghostRow = document.createElement('label');
+    ghostRow.className = 'tl-row';
+    const ghostLabel = document.createElement('span');
+    ghostLabel.className = 'field-label';
+    ghostLabel.textContent = 'Fantasmas';
+    ghostRow.append(ghostLabel, ghostCount, ghostVal);
+
     const ghostOpacity = document.createElement('input');
     ghostOpacity.type = 'range';
     ghostOpacity.min = '0';
@@ -169,12 +193,21 @@ export function createTimelineWindow(doc, playback, view, { x = 12, y = window.i
     ghostOpacity.step = '0.05';
     ghostOpacity.className = 'tl-range';
     ghostOpacity.title = 'Opacidade do ghost';
-    onionRow.append(onionCheck, onionLabel, ghostCount, ghostOpacity);
+    const ghostOpacityVal = document.createElement('span');
+    ghostOpacityVal.className = 'tl-val';
+    const opacityRow = document.createElement('label');
+    opacityRow.className = 'tl-row';
+    const opacityLabel = document.createElement('span');
+    opacityLabel.className = 'field-label';
+    opacityLabel.textContent = 'Opacidade';
+    opacityRow.append(opacityLabel, ghostOpacity, ghostOpacityVal);
+
+    onionBox.append(ghostRow, opacityRow);
 
     const list = document.createElement('div');
     list.className = 'frame-list';
 
-    body.append(note, controls, onionRow, list);
+    body.append(note, controls, fpsRow, onionToggle, onionBox, list);
 
     function applyOnion() {
       view.setOnion({
@@ -184,20 +217,34 @@ export function createTimelineWindow(doc, playback, view, { x = 12, y = window.i
       });
     }
 
+    function syncOnion() {
+      const on = onionCheck.checked;
+      onionBox.classList.toggle('is-off', !on);
+      ghostCount.disabled = !on;
+      ghostOpacity.disabled = !on;
+      applyOnion();
+    }
+
     addBtn.addEventListener('click', () => addFrame(doc), { signal: win.signal });
     dupBtn.addEventListener('click', () => duplicateFrame(doc), { signal: win.signal });
     playBtn.addEventListener('click', () => playback.toggle(), { signal: win.signal });
-    for (const el of [fpsInput, ghostCount, ghostOpacity]) {
+    fpsInput.addEventListener(
+      'input',
+      () => playback.setFps(Number(fpsInput.value)),
+      { signal: win.signal }
+    );
+    for (const el of [ghostCount, ghostOpacity]) {
       el.addEventListener(
         'input',
         () => {
-          if (el === fpsInput) playback.setFps(Number(fpsInput.value));
-          else applyOnion();
+          applyOnion();
+          ghostVal.textContent = String(view.onion().count);
+          ghostOpacityVal.textContent = `${Math.round(view.onion().opacity * 100)}%`;
         },
         { signal: win.signal }
       );
     }
-    onionCheck.addEventListener('change', applyOnion, { signal: win.signal });
+    onionCheck.addEventListener('change', syncOnion, { signal: win.signal });
 
     let rows = [];
     let count = -1; // nº de frames; muda só quando a lista precisa ser reconstruída
@@ -227,6 +274,7 @@ export function createTimelineWindow(doc, playback, view, { x = 12, y = window.i
       name.textContent = frame.name;
 
       const del = document.createElement('button');
+      del.type = 'button';
       del.className = 'frame-del';
       del.textContent = '×';
       del.title = 'Remover frame';
@@ -268,15 +316,22 @@ export function createTimelineWindow(doc, playback, view, { x = 12, y = window.i
       // o playback toca a cada passo: o readout é lido aqui, sem sobrescrever o arraste
       if (document.activeElement !== fpsInput) fpsInput.value = String(playback.fps());
       fpsVal.textContent = `${playback.fps()} fps`;
-      const onion = view.onion();
-      if (document.activeElement !== onionCheck) onionCheck.checked = onion.enabled;
-      if (document.activeElement !== ghostCount) ghostCount.value = String(onion.count);
-      if (document.activeElement !== ghostOpacity) ghostOpacity.value = String(onion.opacity);
+      const onionState = view.onion();
+      if (document.activeElement !== onionCheck) onionCheck.checked = onionState.enabled;
+      if (document.activeElement !== ghostCount) ghostCount.value = String(onionState.count);
+      if (document.activeElement !== ghostOpacity) ghostOpacity.value = String(onionState.opacity);
+      ghostVal.textContent = String(onionState.count);
+      ghostOpacityVal.textContent = `${Math.round(onionState.opacity * 100)}%`;
+      onionBox.classList.toggle('is-off', !onionState.enabled);
+      ghostCount.disabled = !onionState.enabled;
+      ghostOpacity.disabled = !onionState.enabled;
 
       playBtn.textContent = playback.isPlaying() ? '■' : '▶';
       playBtn.setAttribute('aria-pressed', String(playback.isPlaying()));
+      playBtn.setAttribute('aria-label', playback.isPlaying() ? 'Parar a animação' : 'Tocar a animação');
+      playBtn.title = playback.isPlaying() ? 'Parar playback (A)' : 'Playback da animação (A)';
       playBtn.disabled = n < 2; // um frame não anima
-      note.textContent = `${n} frame(s) · ativo: ${doc.frames[doc.frame]?.name ?? '—'} · ${doc.width}×${doc.height}`;
+      note.textContent = `${n} frame${n > 1 ? 's' : ''} · ${doc.width}×${doc.height}`;
     }
 
     const unsubscribeDoc = onChange(doc, render);
@@ -289,5 +344,7 @@ export function createTimelineWindow(doc, playback, view, { x = 12, y = window.i
     render();
   }
 
-  return createWindow({ title: 'Frames', x, y, onBody: build, onOpen, onClose });
+  const win = createWindow({ title: 'Frames', x, y, getPos, onBody: build, onOpen, onClose });
+  win.el.classList.add('window--timeline');
+  return win;
 }

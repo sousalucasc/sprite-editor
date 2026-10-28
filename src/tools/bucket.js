@@ -75,7 +75,7 @@ export function createBucket(doc, colorStore, { tolerance = 0, alphaSensitive = 
 }
 
 // Janela de opções (nível 1): tolerância por canal e se o alfa entra na comparação.
-export function createBucketWindow(bucket, { x = 12, y = 100, onOpen, onClose } = {}) {
+export function createBucketWindow(bucket, { x = 12, y = 100, getPos, onOpen, onClose } = {}) {
   function build(body, win) {
     const note = document.createElement('p');
     note.className = 'window-note';
@@ -87,11 +87,16 @@ export function createBucketWindow(bucket, { x = 12, y = 100, onOpen, onClose } 
     tolInput.max = '255';
     tolInput.step = '1';
     tolInput.value = String(bucket.tolerance);
+    tolInput.setAttribute('aria-label', 'Tolerância do balde');
     const tolVal = document.createElement('span');
+    tolVal.className = 'tl-val';
     tolVal.textContent = String(bucket.tolerance);
+    const tolLabel = document.createElement('span');
+    tolLabel.className = 'field-label';
+    tolLabel.textContent = 'Tolerância';
     const tolRow = document.createElement('label');
-    tolRow.className = 'option-row';
-    tolRow.append(tolInput, tolVal);
+    tolRow.className = 'tl-row';
+    tolRow.append(tolLabel, tolInput, tolVal);
     tolInput.addEventListener(
       'input',
       () => {
@@ -119,5 +124,5 @@ export function createBucketWindow(bucket, { x = 12, y = 100, onOpen, onClose } 
     body.append(note, tolRow, alphaRow, last);
   }
 
-  return createWindow({ title: 'Balde', x, y, onBody: build, onOpen, onClose });
+  return createWindow({ title: 'Balde', x, y, getPos, onBody: build, onOpen, onClose });
 }

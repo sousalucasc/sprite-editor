@@ -20,6 +20,7 @@ function item(steps, text, className) {
   const li = document.createElement('li');
   li.className = className;
   const btn = document.createElement('button');
+  btn.type = 'button';
   btn.textContent = text;
   btn.title = steps === 0 ? 'Estado atual' : `${steps < 0 ? 'Desfazer' : 'Refazer'} ${Math.abs(steps)} traço(s)`;
   btn.dataset.steps = String(steps);
@@ -27,7 +28,7 @@ function item(steps, text, className) {
   return li;
 }
 
-export function createHistoryWindow(doc, { x = window.innerWidth - 280, y = 150, onOpen, onClose } = {}) {
+export function createHistoryWindow(doc, { x = window.innerWidth - 280, y = 150, getPos, onOpen, onClose } = {}) {
   function build(body, win) {
     const note = document.createElement('p');
     note.className = 'window-note';
@@ -39,11 +40,13 @@ export function createHistoryWindow(doc, { x = window.innerWidth - 280, y = 150,
     input.step = '1';
     input.value = String(doc.historyLimit);
     input.title = 'Limite de strokes no histórico';
+    input.setAttribute('aria-label', 'Limite de strokes no histórico');
     const caption = document.createElement('span');
-    caption.textContent = 'strokes no histórico';
+    caption.className = 'field-label';
+    caption.textContent = 'Limite';
     const limit = document.createElement('label');
     limit.className = 'history-limit';
-    limit.append(input, caption);
+    limit.append(caption, input);
     // Commita no `change` (blur/Enter), não no `input`: digitar "12" passa por "1",
     // e aplicar o valor parcial podava o histórico de forma irreversível.
     input.addEventListener('change', () => {
@@ -67,7 +70,7 @@ export function createHistoryWindow(doc, { x = window.innerWidth - 280, y = 150,
 
       note.textContent =
         `${doc.history.length}/${doc.historyLimit} strokes · ` +
-        `${diffPixels(doc)} px em diffs · imagem inteira = ${doc.width * doc.height} px`;
+        `${diffPixels(doc)} px em diffs · imagem ${doc.width * doc.height} px`;
 
       list.textContent = '';
       // histórico: o mais novo primeiro (é o próximo a ser desfeito); o mais novo é o
@@ -92,12 +95,12 @@ export function createHistoryWindow(doc, { x = window.innerWidth - 280, y = 150,
       if (!btn) return;
       const steps = Number(btn.dataset.steps);
       jumpTo(doc, steps < 0 ? { back: -steps } : { fwd: steps });
-    });
+    }, { signal: win.signal });
 
     const unsubscribe = onChange(doc, render);
     win.signal.addEventListener('abort', unsubscribe); // remove a assinatura do doc ao fechar
     render();
   }
 
-  return createWindow({ title: 'Histórico', x, y, onBody: build, onOpen, onClose });
+  return createWindow({ title: 'Histórico', x, y, getPos, onBody: build, onOpen, onClose });
 }

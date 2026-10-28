@@ -11,7 +11,12 @@ body {
   font: var(--fs-md)/var(--text-leading) var(--font-ui);
 }
 
-/* Controles com tamanho exato: borda e padding dentro da caixa (botão 28×28, × 20×20). */
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Controles com tamanho exato: borda e padding dentro da caixa. */
 button,
 input {
   box-sizing: border-box;
@@ -25,35 +30,40 @@ input {
   touch-action: none;
 }
 
-/* Barra flutuante (src/toolbar.js arrasta pelo fundo; botões/inputs não arrastam). */
+/* ---- Toolbar ------------------------------------------------------------- */
+
+/* Barra fixa no centro do topo (não arrastável; o layout de spawn a trata como obstáculo).
+   Densa e alta como a ilha do Excalidraw: 36px de botão + padding, cantos de 10px. */
 .toolbar {
   position: fixed;
   top: var(--space-4);
-  left: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 30;
   display: flex;
-  gap: var(--space-2);
+  gap: 2px;
   align-items: center;
-  padding: var(--space-2);
-  background: color-mix(in oklab, var(--surface) 86%, transparent);
+  max-width: calc(100vw - var(--space-6));
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg), var(--hairline-top);
-  backdrop-filter: blur(12px) saturate(1.15);
-  cursor: move;
+  box-shadow: var(--shadow-md), var(--hairline-top);
+  cursor: default;
   touch-action: none;
 }
 
 .tb-group {
   display: flex;
-  gap: var(--space-1);
+  gap: 2px;
   align-items: center;
 }
 
 .tb-sep {
   flex: none;
   width: 1px;
-  height: 18px;
+  height: 24px;
+  margin-inline: var(--space-2);
   background: var(--border);
 }
 
@@ -67,7 +77,7 @@ input {
   padding: 0;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--text-muted);
   cursor: pointer;
   transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
@@ -83,17 +93,31 @@ input {
   box-shadow: var(--focus-ring);
 }
 
+/* Ferramenta ativa: bloco lilás cheio, como o botão selecionado do Excalidraw. */
 .tb-btn.active,
 .tb-btn[aria-pressed='true'] {
   background: var(--accent-soft);
-  border-color: var(--accent-line);
+  border-color: transparent;
   color: var(--accent);
 }
 
 .tb-btn.active:hover,
 .tb-btn[aria-pressed='true']:hover {
+  background: var(--accent-soft);
   color: var(--accent-hover);
-  border-color: var(--accent);
+}
+
+/* Toggles de painel: o painel aberto fica marcado, mas sem competir com a ferramenta ativa. */
+.tb-group[aria-label='Painéis'] .tb-btn[aria-pressed='true'] {
+  background: transparent;
+  border-color: transparent;
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+}
+
+.tb-group[aria-label='Painéis'] .tb-btn[aria-pressed='true']:hover {
+  background: var(--accent-soft);
+  border-color: transparent;
 }
 
 .tb-btn:disabled {
@@ -123,32 +147,65 @@ input {
   display: inline-block;
 }
 
-/* Readouts de estado: mono tabular, discreto, à direita da barra. */
+/* Readouts de estado: mono tabular, separados por hairlines, à direita da barra. */
 .tb-readouts {
   display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  padding-inline: var(--space-2);
+  align-items: stretch;
+  min-width: 0;
+  margin-left: var(--space-1);
+  border-left: 1px solid var(--border);
 }
 
 .readout {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding-inline: var(--space-3);
   color: var(--text-faint);
   font: var(--fs-xs)/1 var(--font-mono);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-/* ---- Painéis flutuantes criados por src/windows.js ---- */
+.readout + .readout {
+  border-left: 1px solid var(--border);
+}
+
+#hist {
+  min-width: 48px;
+}
+
+#zoom {
+  min-width: 58px;
+  justify-content: flex-end;
+}
+
+#frame {
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#fps {
+  min-width: 48px;
+  justify-content: flex-end;
+}
+
+/* ---- Painéis flutuantes criados por src/windows.js ----------------------- */
+
 .window {
   position: fixed;
   z-index: 40;
-  min-width: var(--panel-min);
-  max-width: var(--panel-max);
-  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: var(--panel-w);
+  max-width: calc(100vw - var(--space-5));
+  max-height: calc(100vh - var(--space-5));
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg), var(--hairline-top);
-  backdrop-filter: blur(12px) saturate(1.15);
   overflow: hidden;
 }
 
@@ -156,53 +213,71 @@ input {
   display: none;
 }
 
+.window--timeline {
+  width: var(--panel-w-wide);
+}
+
 /* Cabeçalho = área de arraste (createDraggable no header). */
 .window-header {
   display: flex;
-  gap: var(--space-3);
+  flex: none;
+  gap: var(--space-2);
   align-items: center;
-  padding: var(--space-2) var(--space-3);
-  background: var(--surface-raised);
+  min-height: 34px;
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  background: color-mix(in oklab, var(--surface-raised) 72%, transparent);
   border-bottom: 1px solid var(--border);
   cursor: move;
   touch-action: none;
   user-select: none;
 }
 
-/* O título é criado por windows.js sem classe: estiliza o primeiro span do cabeçalho. */
-.window-header > span:first-child {
+.window-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   color: var(--text-muted);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-2xs);
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
+/* Nível de aninhamento só aparece em sub-painéis (1/3 no painel raiz era ruído). */
 .window-level {
-  margin-left: auto;
+  flex: none;
   color: var(--text-faint);
-  font: var(--fs-xs)/1 var(--font-mono);
+  font: var(--fs-2xs)/1 var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
+.window:not(.window--nested) .window-level {
+  display: none;
+}
+
 .window-close {
-  width: 20px;
-  height: 20px;
+  flex: none;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   color: var(--text-faint);
-  font: var(--fs-sm)/1 var(--font-mono);
+  font: var(--fs-md)/1 var(--font-mono);
   cursor: pointer;
-  transition: background-color 0.12s ease, color 0.12s ease;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 .window-close:hover {
   background: var(--accent-soft);
+  border-color: var(--accent-line);
   color: var(--accent);
 }
 
@@ -213,20 +288,27 @@ input {
 
 .window-body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3);
+  min-height: 0;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
 }
 
 .window-body button {
-  padding: var(--space-1) var(--space-3);
+  min-height: var(--row-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--space-3);
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
-  font: inherit;
+  font: var(--fs-sm)/1 var(--font-ui);
   cursor: pointer;
   transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
@@ -234,6 +316,10 @@ input {
 .window-body button:hover {
   background: var(--surface-hover);
   border-color: var(--border-strong);
+}
+
+.window-body button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .window-body button:focus-visible {
@@ -246,9 +332,27 @@ input {
   cursor: default;
 }
 
+.window-body button:disabled:active {
+  transform: none;
+}
+
+/* Botão de ação principal (nova camada / novo frame) */
+.window-body .add-btn {
+  width: 100%;
+  justify-content: flex-start;
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-muted);
+}
+
+.window-body .add-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
 /* Glifos usados pelas UIs (× ↑ ↓ ● ○ ▶ ■): só eles em mono, para ficarem alinhados.
-   Os botões de texto do corpo (--font-ui via `font: inherit`) não mudam. As classes
-   precisam de `.window-body` na frente para vencer a regra `font: inherit` do corpo. */
+   Os botões de texto do corpo continuam em --font-ui. */
 .window-close,
 .window-body .layer-row button,
 .window-body .frame-del,
@@ -258,7 +362,7 @@ input {
 
 .window-note {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--text-faint);
   font-size: var(--fs-xs);
   line-height: var(--text-leading);
 }
@@ -272,11 +376,20 @@ input {
   display: none; /* o botão "Abrir" chama fileInput.click(); o input não ocupa espaço */
 }
 
-/* ---- Controles genéricos (inputs das janelas de opções, src/tools/*.js) ---- */
+/* Rótulo de campo (FPS, Escala, Alfa...) */
+.field-label {
+  flex: none;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+
+/* ---- Controles genéricos (inputs das janelas) ---------------------------- */
+
 .window-body input[type='color'],
 .toolbar input[type='color'] {
   width: 36px;
-  height: 26px;
+  height: var(--row-h);
   padding: 0;
   background: transparent;
   border: 1px solid var(--border-strong);
@@ -285,8 +398,8 @@ input {
 
 .hex-field,
 .history-limit input {
-  width: 84px;
-  padding: var(--space-1) var(--space-2);
+  height: var(--row-h);
+  padding: 0 var(--space-2);
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -295,8 +408,13 @@ input {
   font-variant-numeric: tabular-nums;
 }
 
+.hex-field {
+  width: 96px;
+}
+
 .history-limit input {
-  width: 56px;
+  width: 64px;
+  text-align: center;
 }
 
 .hex-field:focus-visible,
@@ -307,15 +425,16 @@ input {
 
 .option-row {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--space-2);
   align-items: center;
+  min-height: 22px;
   color: var(--text-muted);
   font-size: var(--fs-xs);
 }
 
 .option-row input[type='range'] {
   flex: 1;
-  min-width: 60px;
+  min-width: 56px;
   accent-color: var(--accent);
 }
 
@@ -325,48 +444,59 @@ input {
   accent-color: var(--accent);
 }
 
-/* Amostra de cor (seletor e conta-gotas): o fundo vem inline do store, só o envolvente é daqui. */
+/* Amostra de cor (seletor e conta-gotas): o fundo vem inline do store. */
 .swatches {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: var(--space-1);
 }
 
 .swatches button {
-  width: 22px;
-  height: 22px;
+  width: 100%;
+  height: 24px;
+  min-height: 24px;
   padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: border-color 0.12s ease;
+  transition: border-color 0.12s ease, transform 0.12s ease;
 }
 
 .swatches button:hover {
   border-color: var(--accent-line);
+  transform: translateY(-1px);
 }
 
 .swatch-preview {
   display: flex;
   gap: var(--space-2);
   align-items: center;
+  min-height: var(--row-h);
+  padding: 0 var(--space-2);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: var(--fs-xs);
+  font: var(--fs-xs)/1 var(--font-mono);
 }
 
 .swatch-preview .chip {
-  width: 18px;
-  height: 18px;
+  flex: none;
+  width: 20px;
+  height: 20px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--surface-raised);
 }
 
-/* ---- Painel do histórico (src/history.js) ---- */
+/* ---- Painel do histórico (src/history.js) -------------------------------- */
+
 .history-limit {
   display: flex;
   gap: var(--space-2);
   align-items: center;
+  justify-content: space-between;
+  min-height: var(--row-h);
   color: var(--text-muted);
   font-size: var(--fs-xs);
 }
@@ -374,30 +504,33 @@ input {
 .history-list,
 .layer-list,
 .frame-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  max-height: 200px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: min(30vh, 220px);
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
 }
 
 .frame-list {
-  max-height: 160px;
+  max-height: 132px;
 }
 
 .history-item button {
   width: 100%;
-  padding: var(--space-1) var(--space-2);
-  background: transparent;
-  border: 1px solid var(--border);
+  min-height: var(--row-h);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  background: var(--surface-sunken);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font: var(--fs-sm)/1 var(--font-mono);
+  font: var(--fs-xs)/1 var(--font-mono);
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
@@ -414,23 +547,34 @@ input {
 
 .history-item.undone button {
   color: var(--text-faint);
+  background: transparent;
+  border-color: var(--border);
 }
 
 .history-current {
   padding: var(--space-1) var(--space-2);
-  border-left: 2px solid var(--accent-line);
-  color: var(--text-muted);
-  font-size: var(--fs-xs);
+  background: var(--accent-soft);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--accent);
+  font: var(--fs-xs)/1.4 var(--font-mono);
 }
 
-/* ---- Painel de camadas (src/layers.js) ---- */
-.layer-row,
-.frame-row {
-  display: flex;
+/* ---- Painel de camadas (src/layers.js) ----------------------------------- */
+
+/* Duas linhas por camada: identidade/ações em cima, opacidade embaixo.
+   Uma linha só espremia olho + nome + slider + % + ↑ ↓ × em 288px. */
+.layer-row {
+  display: grid;
+  box-sizing: border-box;
+  grid-template-areas:
+    'eye name up down del'
+    'op op pct pct pct';
+  grid-template-columns: 24px minmax(0, 1fr) var(--control-sm) var(--control-sm) var(--control-sm);
   gap: var(--space-1);
   align-items: center;
+  min-height: 54px;
   padding: var(--space-1) var(--space-2);
-  min-height: var(--row-h);
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -438,57 +582,94 @@ input {
   transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 
-.layer-row:hover,
-.frame-row:hover {
+.layer-row:hover {
   background: var(--surface-hover);
 }
 
-.layer-row.active,
-.frame-row.active {
+.layer-row.active {
   background: var(--accent-soft);
   border-color: var(--accent-line);
 }
 
-.layer-row:focus-visible,
-.frame-row:focus-visible {
+.layer-row:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
 
-.layer-name,
-.frame-name {
-  flex: 1;
+.layer-name {
+  grid-area: name;
   min-width: 0;
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   color: var(--text-muted);
   font-size: var(--fs-sm);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.layer-row.active .layer-name,
-.frame-row.active .frame-name {
+.layer-row.active .layer-name {
   color: var(--text);
+  font-weight: 600;
 }
 
-.layer-eye {
-  width: 22px;
-  padding: var(--space-1) 0;
-  text-align: center;
+/* Olho desenhado em CSS: o módulo só troca aria-pressed (nada de ●/○ feio). */
+.layer-row .layer-eye {
+  position: relative;
+  grid-area: eye;
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
   color: var(--text-faint);
+  font-size: 0;
 }
 
-.layer-eye[aria-pressed='true'] {
+.layer-row .layer-eye::before {
+  content: '';
+  position: absolute;
+  width: 13px;
+  height: 9px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.layer-row .layer-eye::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.layer-row .layer-eye[aria-pressed='false']::after {
+  opacity: 0;
+}
+
+.layer-row .layer-eye[aria-pressed='false']::before {
+  opacity: 0.55;
+}
+
+.layer-row .layer-eye[aria-pressed='true'] {
   color: var(--accent);
-  border-color: var(--accent-line);
+}
+
+.layer-row .layer-eye:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
 }
 
 .layer-opacity {
-  width: 56px;
+  grid-area: op;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
   accent-color: var(--accent);
 }
 
 .layer-pct {
+  grid-area: pct;
   min-width: 34px;
   color: var(--text-faint);
   font: var(--fs-xs)/1 var(--font-mono);
@@ -496,25 +677,52 @@ input {
   text-align: right;
 }
 
-.layer-row button,
-.frame-row button {
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--fs-xs);
+.layer-up {
+  grid-area: up;
 }
 
-.frame-idx {
-  min-width: 22px;
+.layer-down {
+  grid-area: down;
+}
+
+.layer-del {
+  grid-area: del;
+}
+
+.layer-row > button:not(.layer-eye) {
+  width: var(--control-sm);
+  height: var(--control-sm);
+  min-height: var(--control-sm);
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   color: var(--text-faint);
-  font: var(--fs-xs)/1 var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
+  font-size: var(--fs-sm);
 }
 
-.frame-row.active .frame-idx {
-  color: var(--accent);
+.layer-row > button:not(.layer-eye):hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+  color: var(--text);
 }
 
-/* ---- Timeline: controles de playback e onion (src/timeline.js) ---- */
+/* ---- Timeline: frames, playback e onion (src/timeline.js) ---------------- */
+
+.tl-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.tl-actions button {
+  flex: 1;
+}
+
+.tl-actions .tl-play {
+  flex: 0 0 32px;
+  padding: 0;
+}
+
 .tl-controls {
   display: flex;
   gap: var(--space-2);
@@ -522,7 +730,7 @@ input {
 }
 
 .tl-play {
-  min-width: 30px;
+  min-width: 32px;
   padding-inline: var(--space-1);
   text-align: center;
 }
@@ -533,18 +741,193 @@ input {
   color: var(--accent);
 }
 
+.tl-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: 22px;
+}
+
+.tl-row > .field-label {
+  min-width: 46px;
+}
+
+.tl-row input[type='range'] {
+  flex: 1;
+  min-width: 56px;
+  accent-color: var(--accent);
+}
+
 .tl-range {
   flex: 1;
-  min-width: 60px;
+  min-width: 56px;
   accent-color: var(--accent);
 }
 
 .tl-val {
-  min-width: 46px;
+  min-width: 42px;
   color: var(--text-faint);
   font: var(--fs-xs)/1 var(--font-mono);
   font-variant-numeric: tabular-nums;
   text-align: right;
+  white-space: nowrap;
+}
+
+.tl-toggle {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: 22px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.tl-toggle input[type='checkbox'] {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.tl-onion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-4);
+  transition: opacity 0.12s ease;
+}
+
+.tl-onion.is-off {
+  opacity: 0.4;
+}
+
+.tl-onion input[type='range']:disabled {
+  cursor: default;
+}
+
+.frame-row {
+  display: flex;
+  box-sizing: border-box;
+  gap: var(--space-1);
+  align-items: center;
+  min-height: 30px;
+  padding: 2px var(--space-1) 2px var(--space-2);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.frame-row:hover {
+  background: var(--surface-hover);
+}
+
+.frame-row.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+
+.frame-row:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.frame-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.frame-row.active .frame-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.frame-idx {
+  min-width: 20px;
+  color: var(--text-faint);
+  font: var(--fs-xs)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.frame-row.active .frame-idx {
+  color: var(--accent);
+}
+
+.frame-row .frame-del {
+  flex: none;
+  width: var(--control-sm);
+  height: var(--control-sm);
+  min-height: var(--control-sm);
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+}
+
+.frame-row .frame-del:hover {
+  background: var(--surface-hover);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* ---- Exportar (src/export.js) -------------------------------------------- */
+
+.export-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-1);
+}
+
+.export-project {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-1);
+}
+
+.export-actions button,
+.export-project button {
+  width: 100%;
+  padding-inline: var(--space-1);
+}
+
+/* ---- Responsivo ---------------------------------------------------------- */
+
+/* Em telas estreitas os readouts são o primeiro item a sair: o canvas manda. */
+@media (max-width: 1280px) {
+  #frame {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .tb-readouts {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .window,
+  .window--timeline {
+    width: calc(100vw - var(--space-5));
+    max-width: calc(100vw - var(--space-5));
+  }
+
+  .toolbar {
+    gap: 2px;
+    padding: var(--space-1);
+  }
+
+  .tb-sep {
+    margin-inline: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -554,7 +937,13 @@ input {
   .swatches button,
   .history-item button,
   .layer-row,
-  .frame-row {
+  .frame-row,
+  .tl-onion {
     transition: none;
+  }
+
+  .window-body button:active:not(:disabled),
+  .swatches button:hover {
+    transform: none;
   }
 }

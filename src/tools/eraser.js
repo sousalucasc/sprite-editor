@@ -82,7 +82,7 @@ export function createEraser(doc, { size = 1, shape = 'square' } = {}) {
 
 // Janela de opções (nível 1): tamanho do pincel e formato. As opções são propriedades
 // vivas da tool — a janela escreve direto, sem estado no doc.
-export function createEraserWindow(eraser, { x = 12, y = 100, onOpen, onClose } = {}) {
+export function createEraserWindow(eraser, { x = 12, y = 100, getPos, onOpen, onClose } = {}) {
   function build(body, win) {
     const note = document.createElement('p');
     note.className = 'window-note';
@@ -94,16 +94,21 @@ export function createEraserWindow(eraser, { x = 12, y = 100, onOpen, onClose } 
     sizeInput.max = String(MAX_SIZE);
     sizeInput.step = '1';
     sizeInput.value = String(eraser.size);
+    sizeInput.setAttribute('aria-label', 'Tamanho do pincel');
     const sizeVal = document.createElement('span');
-    sizeVal.textContent = String(eraser.size);
+    sizeVal.className = 'tl-val';
+    sizeVal.textContent = `${eraser.size} px`;
+    const sizeLabel = document.createElement('span');
+    sizeLabel.className = 'field-label';
+    sizeLabel.textContent = 'Tamanho';
     const sizeRow = document.createElement('label');
-    sizeRow.className = 'option-row';
-    sizeRow.append(sizeInput, sizeVal);
+    sizeRow.className = 'tl-row';
+    sizeRow.append(sizeLabel, sizeInput, sizeVal);
     sizeInput.addEventListener(
       'input',
       () => {
         eraser.setSize(Number(sizeInput.value));
-        sizeVal.textContent = String(eraser.size);
+        sizeVal.textContent = `${eraser.size} px`;
       },
       { signal: win.signal }
     );
@@ -136,5 +141,5 @@ export function createEraserWindow(eraser, { x = 12, y = 100, onOpen, onClose } 
     body.append(note, sizeRow, shapeRow, shapeRow2);
   }
 
-  return createWindow({ title: 'Borracha', x, y, onBody: build, onOpen, onClose });
+  return createWindow({ title: 'Borracha', x, y, getPos, onBody: build, onOpen, onClose });
 }

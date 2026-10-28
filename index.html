@@ -16,19 +16,19 @@
          canvas fica com o máximo de tela. Os IDs não mudam: src/main.js busca por ID. -->
     <div class="toolbar" role="toolbar" aria-label="Ferramentas">
       <span class="tb-group" role="group" aria-label="Ferramentas de pintura">
-        <button id="tool-pencil" class="tb-btn" aria-pressed="true" title="Lápis (P)" aria-label="Lápis">
+        <button type="button" id="tool-pencil" class="tb-btn" aria-pressed="true" title="Lápis (P)" aria-label="Lápis">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
             <path d="m15 5 4 4" />
           </svg>
         </button>
-        <button id="tool-eraser" class="tb-btn" aria-pressed="false" title="Borracha (E)" aria-label="Borracha">
+        <button type="button" id="tool-eraser" class="tb-btn" aria-pressed="false" title="Borracha (E)" aria-label="Borracha">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21" />
             <path d="m5.082 11.09 8.828 8.828" />
           </svg>
         </button>
-        <button id="tool-bucket" class="tb-btn" aria-pressed="false" title="Balde (B)" aria-label="Balde">
+        <button type="button" id="tool-bucket" class="tb-btn" aria-pressed="false" title="Balde (B)" aria-label="Balde">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M11 7 6 2" />
             <path d="M18.992 12H2.041" />
@@ -36,14 +36,14 @@
             <path d="m8.5 4.5 2.148-2.148a1.205 1.205 0 0 1 1.704 0l7.296 7.296a1.205 1.205 0 0 1 0 1.704l-7.592 7.592a3.615 3.615 0 0 1-5.112 0l-3.888-3.888a3.615 3.615 0 0 1 0-5.112L5.67 7.33" />
           </svg>
         </button>
-        <button id="tool-dropper" class="tb-btn" aria-pressed="false" title="Conta-gotas (I)" aria-label="Conta-gotas">
+        <button type="button" id="tool-dropper" class="tb-btn" aria-pressed="false" title="Conta-gotas (I)" aria-label="Conta-gotas">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="m12 9-8.414 8.414A2 2 0 0 0 3 18.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 3.828 21h1.344a2 2 0 0 0 1.414-.586L15 12" />
             <path d="m18 9 .4.4a1 1 0 1 1-3 3l-3.8-3.8a1 1 0 1 1 3-3l.4.4 3.4-3.4a1 1 0 1 1 3 3z" />
             <path d="m2 22 .414-.414" />
           </svg>
         </button>
-        <button id="win-color" class="tb-btn" aria-pressed="false" title="Seletor de cor (C)" aria-label="Seletor de cor">
+        <button type="button" id="win-color" class="tb-btn" aria-pressed="false" title="Seletor de cor (C)" aria-label="Seletor de cor">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" />
             <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
@@ -57,19 +57,19 @@
       <span class="tb-sep" aria-hidden="true"></span>
 
       <span class="tb-group" role="group" aria-label="Desfazer e refazer">
-        <button id="undo" class="tb-btn" title="Ctrl+Z" aria-label="Desfazer" disabled>
+        <button type="button" id="undo" class="tb-btn" title="Ctrl+Z" aria-label="Desfazer" disabled>
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 14 4 9l5-5" />
             <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
           </svg>
         </button>
-        <button id="redo" class="tb-btn" title="Ctrl+Shift+Z" aria-label="Refazer" disabled>
+        <button type="button" id="redo" class="tb-btn" title="Ctrl+Shift+Z" aria-label="Refazer" disabled>
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="m15 14 5-5-5-5" />
             <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13" />
           </svg>
         </button>
-        <button id="win-history" class="tb-btn" aria-pressed="true" title="Histórico (Ctrl+H)" aria-label="Painel do histórico">
+        <button type="button" id="win-history" class="tb-btn" aria-pressed="true" title="Histórico (Ctrl+H)" aria-label="Painel do histórico">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 6v6l1.5.8" />
             <path d="M12.338 21.994a10 10 0 1 1 9.587-8.767" />
@@ -82,14 +82,14 @@
       <span class="tb-sep" aria-hidden="true"></span>
 
       <span class="tb-group" role="group" aria-label="Painéis">
-        <button id="win-layers" class="tb-btn" aria-pressed="true" title="Camadas (L)" aria-label="Painel de camadas">
+        <button type="button" id="win-layers" class="tb-btn" aria-pressed="true" title="Camadas (L)" aria-label="Painel de camadas">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" />
             <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" />
             <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" />
           </svg>
         </button>
-        <button id="win-timeline" class="tb-btn" aria-pressed="true" title="Frames (T)" aria-label="Painel de frames">
+        <button type="button" id="win-timeline" class="tb-btn" aria-pressed="true" title="Frames (T)" aria-label="Painel de frames">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect width="18" height="18" x="3" y="3" rx="2" />
             <path d="M7 3v18" />
@@ -101,7 +101,7 @@
             <path d="M17 16.5h4" />
           </svg>
         </button>
-        <button id="win-export" class="tb-btn" aria-pressed="false" title="Exportar (X)" aria-label="Painel de exportação">
+        <button type="button" id="win-export" class="tb-btn" aria-pressed="false" title="Exportar (X)" aria-label="Painel de exportação">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 15V3" />
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -115,7 +115,7 @@
       <span class="tb-group" role="group" aria-label="Playback">
         <!-- Dois ícones, um só visível: o CSS troca por `aria-pressed`, que src/main.js
              já atualiza pela assinatura do playback. -->
-        <button id="play" class="tb-btn tb-play" aria-pressed="false" title="Playback da animação (A)" aria-label="Tocar a animação">
+        <button type="button" id="play" class="tb-btn tb-play" aria-pressed="false" title="Playback da animação (A)" aria-label="Tocar a animação">
           <svg class="icon ic-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" />
           </svg>
@@ -125,11 +125,11 @@
         </button>
       </span>
 
-      <span class="tb-readouts">
-        <span id="hist" class="readout"></span>
-        <span id="zoom" class="readout">100%</span>
-        <span id="frame" class="readout"></span>
-        <span id="fps" class="readout">12 fps</span>
+      <span class="tb-readouts" aria-label="Estado do documento">
+        <span id="hist" class="readout" title="Strokes no histórico"></span>
+        <span id="zoom" class="readout" title="Zoom">100%</span>
+        <span id="frame" class="readout" title="Frame ativo"></span>
+        <span id="fps" class="readout" title="FPS do playback">12 fps</span>
       </span>
     </div>
 

@@ -2,9 +2,9 @@
 // Zoom/pan pertencem à view, não ao documento.
 import { onChange } from './state.js';
 
-const BG = '#1b1b1b';
-const CHECK_A = '#2d2d2d';
-const CHECK_B = '#3a3a3a';
+const BG = '#121212';
+const CHECK_A = '#232329';
+const CHECK_B = '#2b2b33';
 const GRID_COLOR = 'rgba(255,255,255,0.08)';
 const BORDER_COLOR = 'rgba(255,255,255,0.28)';
 const MIN_SCALE = 0.25;
@@ -21,7 +21,10 @@ const TINT_NEXT = 'rgba(96,255,164,0.55)';
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-export function createRenderer(canvas, doc, { onChangeView } = {}) {
+const overlap = (a, b) =>
+  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+export function createRenderer(canvas, doc, { onChangeView, fitObstacles = null } = {}) {
   const ctx = canvas.getContext('2d');
   const view = { scale: 6, tx: 0, ty: 0 }; // tx/ty em pixels de tela (device px)
   const off = document.createElement('canvas');
@@ -33,6 +36,7 @@ export function createRenderer(canvas, doc, { onChangeView } = {}) {
   let dirty = false;
   let raf = 0;
   let fitted = false;
+  let userView = false; // zoom/pan manual: o refit automático não mexe mais na view
   let space = false;
   let pan = null; // último ponto da pan drag, em device px
   let drawing = false; // botão esquerdo pressionado sobre o canvas (traço em andamento)
@@ -64,13 +68,67 @@ export function createRenderer(canvas, doc, { onChangeView } = {}) {
     requestRender();
   }
 
+  // fit default: o MAIOR retângulo livre que não é coberto pela UI (toolbar + painéis
+  // abertos, medidos por src/layout.js em px de CSS). O retângulo é montado com as bordas
+  // dos obstáculos, então o sprite aproveita o espaço ao lado de um painel em vez de
+  // encolher por causa de uma faixa fixa. Zoom/pan do usuário continuam livres.
   function fit() {
-    const pad = 24 * (window.devicePixelRatio || 1);
-    const s = Math.min((canvas.width - pad * 2) / doc.width, (canvas.height - pad * 2) / doc.height);
-    view.scale = clamp(Math.floor(s) || 1, MIN_SCALE, MAX_SCALE);
-    view.tx = (canvas.width - doc.width * view.scale) / 2;
-    view.ty = (canvas.height - doc.height * view.scale) / 2;
+    const dpr = window.devicePixelRatio || 1;
+    const pad = 24 * dpr;
+    const W = canvas.width;
+    const H = canvas.height;
+    const obs = (fitObstacles?.() ?? []).map((r) => ({
+      x: r.x * dpr,
+      y: r.y * dpr,
+      width: r.width * dpr,
+      height: r.height * dpr,
+    }));
+
+    const xs = [0, W];
+    const ys = [0, H];
+    for (const o of obs) {
+      if (o.width <= 0 || o.height <= 0) continue;
+      xs.push(clamp(o.x, 0, W), clamp(o.x + o.width, 0, W));
+      ys.push(clamp(o.y, 0, H), clamp(o.y + o.height, 0, H));
+    }
+    const uniq = (arr) => [...new Set(arr)].sort((a, b) => a - b);
+    const xa = uniq(xs);
+    const ya = uniq(ys);
+
+    let best = null;
+    for (let i = 0; i < xa.length - 1; i++) {
+      for (let j = i + 1; j < xa.length; j++) {
+        const rw = xa[j] - xa[i];
+        if (rw < pad * 2) continue;
+        for (let k = 0; k < ya.length - 1; k++) {
+          for (let l = k + 1; l < ya.length; l++) {
+            const rh = ya[l] - ya[k];
+            if (rh < pad * 2) continue;
+            const rect = { x: xa[i], y: ya[k], width: rw, height: rh };
+            if (obs.some((o) => overlap(rect, o))) continue;
+            const s = Math.min((rw - pad * 2) / doc.width, (rh - pad * 2) / doc.height);
+            if (!best || s > best.s + 1e-6 || (Math.abs(s - best.s) <= 1e-6 && rw * rh > best.area)) {
+              best = { rect, s, area: rw * rh };
+            }
+          }
+        }
+      }
+    }
+
+    const rect = best?.rect ?? { x: 0, y: 0, width: W, height: H };
+    const raw = best?.s ?? Math.min((W - pad * 2) / doc.width, (H - pad * 2) / doc.height);
+    view.scale = clamp(Math.floor(raw) || 1, MIN_SCALE, MAX_SCALE);
+    view.tx = rect.x + (rect.width - doc.width * view.scale) / 2;
+    view.ty = rect.y + (rect.height - doc.height * view.scale) / 2;
     notifyView();
+  }
+
+  // Reajusta o fit quando a UI muda (painel abriu/fechou/redimensionou). Se o usuário já
+  // deu zoom ou pan, a view dele manda: nada é reposicionado.
+  function refit() {
+    if (userView) return;
+    fit();
+    requestRender(); // o fit muda a view sem tocar nos pixels: redesenha já
   }
 
   function requestRender() {
@@ -108,6 +166,7 @@ export function createRenderer(canvas, doc, { onChangeView } = {}) {
     view.tx = s.x - (s.x - view.tx) * k;
     view.ty = s.y - (s.y - view.ty) * k;
     view.scale = next;
+    userView = true; // o usuário assumiu o zoom: refit automático não reposiciona mais
     requestRender();
     notifyView();
   }
@@ -141,6 +200,7 @@ export function createRenderer(canvas, doc, { onChangeView } = {}) {
       view.tx += s.x - pan.x;
       view.ty += s.y - pan.y;
       pan = s;
+      userView = true; // pan manual: refit automático não reposiciona mais
       requestRender();
       return;
     }
@@ -336,6 +396,7 @@ export function createRenderer(canvas, doc, { onChangeView } = {}) {
   return {
     view,
     fit,
+    refit,
     requestRender,
     isDrawing: () => drawing,
     onion: () => onion,

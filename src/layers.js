@@ -7,12 +7,14 @@
 import { createWindow } from './windows.js';
 import { onChange, addLayer, removeLayer, moveLayer, selectLayer, setLayerVisible, setLayerOpacity, setLayerOpacityLive } from './state.js';
 
-export function createLayersWindow(doc, { x = window.innerWidth - 560, y = 150, onOpen, onClose } = {}) {
+export function createLayersWindow(doc, { x = window.innerWidth - 560, y = 150, getPos, onOpen, onClose } = {}) {
   function build(body, win) {
     const note = document.createElement('p');
     note.className = 'window-note';
 
     const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'add-btn';
     addBtn.textContent = 'Nova camada';
     addBtn.title = 'Criar camada acima da do topo';
     addBtn.addEventListener('click', () => addLayer(doc), { signal: win.signal });
@@ -20,7 +22,7 @@ export function createLayersWindow(doc, { x = window.innerWidth - 560, y = 150, 
     const list = document.createElement('div');
     list.className = 'layer-list';
 
-    body.append(note, addBtn, list);
+    body.append(note, list, addBtn);
 
     let rows = [];
     let signature = ''; // frame + nº de camadas; muda só quando a lista precisa ser reconstruída
@@ -45,6 +47,7 @@ export function createLayersWindow(doc, { x = window.innerWidth - 560, y = 150, 
       }, { signal: rowLife.signal });
 
       const eye = document.createElement('button');
+      eye.type = 'button';
       eye.className = 'layer-eye';
       eye.title = 'Mostrar/ocultar camada';
       eye.addEventListener('click', () => {
@@ -81,22 +84,29 @@ export function createLayersWindow(doc, { x = window.innerWidth - 560, y = 150, 
       pct.className = 'layer-pct';
 
       const up = document.createElement('button');
+      up.type = 'button';
+      up.className = 'layer-up';
       up.textContent = '↑';
       up.title = 'Subir camada';
+      up.setAttribute('aria-label', 'Subir camada');
       up.addEventListener('click', () => {
         const i = indexOf(row);
         if (i !== -1) moveLayer(doc, i, i + 1);
       }, { signal: rowLife.signal });
 
       const down = document.createElement('button');
+      down.type = 'button';
+      down.className = 'layer-down';
       down.textContent = '↓';
       down.title = 'Descer camada';
+      down.setAttribute('aria-label', 'Descer camada');
       down.addEventListener('click', () => {
         const i = indexOf(row);
         if (i !== -1) moveLayer(doc, i, i - 1);
       }, { signal: rowLife.signal });
 
       const del = document.createElement('button');
+      del.type = 'button';
       del.className = 'layer-del';
       del.textContent = '×';
       del.title = 'Remover camada';
@@ -135,8 +145,9 @@ export function createLayersWindow(doc, { x = window.innerWidth - 560, y = 150, 
         const idx = frame.layers.indexOf(row.layer);
         if (idx !== -1) byIndex[idx] = row; // camada sumiu via undo antes deste render
         row.classList.toggle('active', idx === doc.layer);
-        row.eye.textContent = row.layer.visible ? '●' : '○';
         row.eye.setAttribute('aria-pressed', String(row.layer.visible));
+        row.eye.setAttribute('aria-label', row.layer.visible ? 'Ocultar camada' : 'Mostrar camada');
+        row.eye.title = row.layer.visible ? 'Ocultar camada' : 'Mostrar camada';
         if (document.activeElement !== row.op) row.op.value = String(row.layer.opacity);
         row.pct.textContent = `${Math.round(row.layer.opacity * 100)}%`;
         row.up.disabled = idx === frame.layers.length - 1;
@@ -145,7 +156,7 @@ export function createLayersWindow(doc, { x = window.innerWidth - 560, y = 150, 
       });
       list.textContent = '';
       for (let i = byIndex.length - 1; i >= 0; i--) if (byIndex[i]) list.append(byIndex[i]);
-      note.textContent = `${doc.frames.length} frame · ${frame.name} · ${frame.layers.length} camada(s) · ativa: ${frame.layers[doc.layer]?.name ?? '—'}`;
+      note.textContent = `Frame ${doc.frame + 1} · ${frame.layers.length} camada${frame.layers.length > 1 ? 's' : ''} · ativa: ${frame.layers[doc.layer]?.name ?? '—'}`;
     }
 
     const unsubscribe = onChange(doc, render);
@@ -153,5 +164,5 @@ export function createLayersWindow(doc, { x = window.innerWidth - 560, y = 150, 
     render();
   }
 
-  return createWindow({ title: 'Camadas', x, y, onBody: build, onOpen, onClose });
+  return createWindow({ title: 'Camadas', x, y, getPos, onBody: build, onOpen, onClose });
 }

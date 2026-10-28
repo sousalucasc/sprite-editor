@@ -78,7 +78,7 @@ export function createDropper(doc, colorStore, { source = 'composite', applyToSt
 }
 
 // Janela de opções (nível 1): fonte da amostra e se a cor vai para o lápis/balde.
-export function createDropperWindow(dropper, { x = 12, y = 100, onOpen, onClose } = {}) {
+export function createDropperWindow(dropper, { x = 12, y = 100, getPos, onOpen, onClose } = {}) {
   function build(body, win) {
     const note = document.createElement('p');
     note.className = 'window-note';
@@ -135,5 +135,5 @@ export function createDropperWindow(dropper, { x = 12, y = 100, onOpen, onClose 
     body.append(note, compositeRow, layerRow, applyRow, preview);
   }
 
-  return createWindow({ title: 'Conta-gotas', x, y, onBody: build, onOpen, onClose });
+  return createWindow({ title: 'Conta-gotas', x, y, getPos, onBody: build, onOpen, onClose });
 }

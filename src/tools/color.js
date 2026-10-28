@@ -7,8 +7,10 @@ import { createWindow } from '../windows.js';
 const RE_HEX = /^#[0-9a-f]{6}$/i;
 
 export const DEFAULT_PRESETS = [
-  '#ffffff', '#cfcfcf', '#8f8f8f', '#454545', '#1b1b1b',
-  '#ff5252', '#ff8f3b', '#ffd166', '#6dcb7f', '#3b8cff', '#8f6bff', '#e86fb0',
+  // Paleta do Excalidraw (tema escuro): 1ª linha = traço neutro + cores fortes;
+  // 2ª linha = fundos pastel. O grid do painel é 6 colunas, então fecha em 2 linhas.
+  '#ffffff', '#e03131', '#2f9e44', '#1971c2', '#f08c00', '#ced4da',
+  '#ffc9c9', '#b2f2bb', '#a5d8ff', '#ffec99', '#ff8787', '#8ce99a',
 ];
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -45,12 +47,13 @@ export function createColorStore({ hex = '#ffffff', alpha = 1 } = {}) {
   return store;
 }
 
-export function createColorWindow(store, { x = window.innerWidth - 280, y = 470, onOpen, onClose, presets = DEFAULT_PRESETS } = {}) {
+export function createColorWindow(store, { x = window.innerWidth - 280, y = 470, getPos, onOpen, onClose, presets = DEFAULT_PRESETS } = {}) {
   function build(body, win) {
     const colorInput = document.createElement('input');
     colorInput.type = 'color';
     colorInput.value = store.hex;
     colorInput.title = 'Cor';
+    colorInput.setAttribute('aria-label', 'Cor');
     colorInput.addEventListener('input', () => store.set({ hex: colorInput.value }), { signal: win.signal });
 
     const hexField = document.createElement('input');
@@ -60,9 +63,17 @@ export function createColorWindow(store, { x = window.innerWidth - 280, y = 470,
     hexField.maxLength = 7;
     hexField.spellcheck = false;
     hexField.title = 'Hex (#rrggbb)';
+    hexField.setAttribute('aria-label', 'Cor em hexadecimal');
     hexField.addEventListener('input', () => {
       if (RE_HEX.test(hexField.value)) store.set({ hex: hexField.value });
     }, { signal: win.signal });
+
+    const colorLabel = document.createElement('span');
+    colorLabel.className = 'field-label';
+    colorLabel.textContent = 'Cor';
+    const colorRow = document.createElement('div');
+    colorRow.className = 'option-row';
+    colorRow.append(colorLabel, colorInput, hexField);
 
     const alphaRange = document.createElement('input');
     alphaRange.type = 'range';
@@ -70,17 +81,24 @@ export function createColorWindow(store, { x = window.innerWidth - 280, y = 470,
     alphaRange.max = '1';
     alphaRange.step = '0.01';
     alphaRange.value = String(store.alpha);
+    alphaRange.setAttribute('aria-label', 'Alfa');
     const alphaVal = document.createElement('span');
+    alphaVal.className = 'tl-val';
+    const alphaLabel = document.createElement('span');
+    alphaLabel.className = 'field-label';
+    alphaLabel.textContent = 'Alfa';
     const alphaRow = document.createElement('label');
-    alphaRow.className = 'option-row';
-    alphaRow.append(alphaRange, alphaVal);
+    alphaRow.className = 'tl-row';
+    alphaRow.append(alphaLabel, alphaRange, alphaVal);
     alphaRange.addEventListener('input', () => store.set({ alpha: Number(alphaRange.value) }), { signal: win.signal });
 
     const swatches = document.createElement('div');
     swatches.className = 'swatches';
     for (const hex of presets) {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.title = hex;
+      btn.setAttribute('aria-label', `Usar cor ${hex}`);
       btn.dataset.hex = hex;
       btn.style.background = hex;
       btn.addEventListener('click', () => store.set({ hex: btn.dataset.hex }), { signal: win.signal });
@@ -94,7 +112,7 @@ export function createColorWindow(store, { x = window.innerWidth - 280, y = 470,
     preview.className = 'swatch-preview';
     preview.append(chip, code);
 
-    body.append(colorInput, hexField, alphaRow, swatches, preview);
+    body.append(colorRow, alphaRow, swatches, preview);
 
     function render() {
       const [r, g, b] = store.rgba();
@@ -112,5 +130,5 @@ export function createColorWindow(store, { x = window.innerWidth - 280, y = 470,
     render();
   }
 
-  return createWindow({ title: 'Cor', x, y, onBody: build, onOpen, onClose });
+  return createWindow({ title: 'Cor', x, y, getPos, onBody: build, onOpen, onClose });
 }

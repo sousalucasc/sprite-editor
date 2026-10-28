@@ -12,7 +12,7 @@ const SCALE_MIN = 1;
 
 const baseName = (doc) => `aseclone-${doc.width}x${doc.height}`;
 
-export function createExportWindow(doc, view, playback, { x = 12, y = 100, onOpen, onClose } = {}) {
+export function createExportWindow(doc, view, playback, { x = 12, y = 100, getPos, onOpen, onClose } = {}) {
   let scale = 1;
   let readout = null; // só existe enquanto a janela está aberta
   const life = new AbortController(); // input de arquivo + timers de object URL
@@ -163,23 +163,32 @@ export function createExportWindow(doc, view, playback, { x = 12, y = 100, onOpe
     readout.className = 'window-note';
 
     const actions = document.createElement('div');
-    actions.className = 'tl-controls';
+    actions.className = 'export-actions';
     const pngBtn = document.createElement('button');
+    pngBtn.type = 'button';
     pngBtn.textContent = 'PNG';
     pngBtn.title = 'Exportar o frame atual como PNG (alfa preservado)';
     const sheetBtn = document.createElement('button');
+    sheetBtn.type = 'button';
     sheetBtn.textContent = 'Sheet';
     sheetBtn.title = 'Spritesheet PNG: todos os frames lado a lado';
     const gifBtn = document.createElement('button');
+    gifBtn.type = 'button';
     gifBtn.textContent = 'GIF';
     gifBtn.title = 'GIF animado no ritmo do playback (transparência de 1 bit)';
+    actions.append(pngBtn, sheetBtn, gifBtn);
+
+    const project = document.createElement('div');
+    project.className = 'export-project';
     const jsonBtn = document.createElement('button');
-    jsonBtn.textContent = 'Salvar';
+    jsonBtn.type = 'button';
+    jsonBtn.textContent = 'Salvar projeto';
     jsonBtn.title = 'Salvar o projeto como JSON (Ctrl+S)';
     const openBtn = document.createElement('button');
-    openBtn.textContent = 'Abrir';
+    openBtn.type = 'button';
+    openBtn.textContent = 'Abrir projeto';
     openBtn.title = 'Abrir um projeto JSON (Ctrl+O)';
-    actions.append(pngBtn, sheetBtn, gifBtn, jsonBtn, openBtn);
+    project.append(jsonBtn, openBtn);
 
     const scaleInput = document.createElement('input');
     scaleInput.type = 'range';
@@ -188,11 +197,15 @@ export function createExportWindow(doc, view, playback, { x = 12, y = 100, onOpe
     scaleInput.step = '1';
     scaleInput.value = String(scale);
     scaleInput.title = 'Escala de exportação (nearest neighbour)';
+    scaleInput.setAttribute('aria-label', 'Escala de exportação');
     const scaleVal = document.createElement('span');
     scaleVal.className = 'tl-val';
+    const scaleLabel = document.createElement('span');
+    scaleLabel.className = 'field-label';
+    scaleLabel.textContent = 'Escala';
     const scaleRow = document.createElement('label');
-    scaleRow.className = 'option-row';
-    scaleRow.append(scaleInput, scaleVal);
+    scaleRow.className = 'tl-row';
+    scaleRow.append(scaleLabel, scaleInput, scaleVal);
     scaleInput.addEventListener('input', () => {
       setScale(Number(scaleInput.value));
       scaleVal.textContent = `${scale}x`;
@@ -202,7 +215,7 @@ export function createExportWindow(doc, view, playback, { x = 12, y = 100, onOpe
     const sep = document.createElement('div');
     sep.className = 'window-sep';
 
-    body.append(readout, actions, scaleRow, sep, fileInput);
+    body.append(readout, actions, scaleRow, sep, project, fileInput);
 
     pngBtn.addEventListener('click', exportPNG, { signal: win.signal });
     sheetBtn.addEventListener('click', exportSheet, { signal: win.signal });
@@ -214,8 +227,8 @@ export function createExportWindow(doc, view, playback, { x = 12, y = 100, onOpe
       const fps = playback.fps();
       const hint = doc.frames.length < 2 ? ' · GIF precisa de 2+ frames' : '';
       readout.textContent =
-        `${doc.width}×${doc.height} · ${doc.frames.length} frame(s) · frame ativo ${doc.frame + 1} · ` +
-        `GIF a ${fps} fps · escala ${scale}x${hint}`;
+        `${doc.width}×${doc.height} · ${doc.frames.length} frame${doc.frames.length > 1 ? 's' : ''} · ` +
+        `GIF a ${fps} fps${hint}`;
       if (document.activeElement !== scaleInput) scaleInput.value = String(scale);
       scaleVal.textContent = `${scale}x`;
       gifBtn.disabled = doc.frames.length < 2;
@@ -229,7 +242,7 @@ export function createExportWindow(doc, view, playback, { x = 12, y = 100, onOpe
     render();
   }
 
-  const win = createWindow({ title: 'Exportar', x, y, onBody: build, onOpen, onClose });
+  const win = createWindow({ title: 'Exportar', x, y, getPos, onBody: build, onOpen, onClose });
 
   return {
     win,

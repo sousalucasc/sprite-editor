@@ -3,6 +3,7 @@ import { createDoc, undo, redo, onChange, strokeSummary } from './state.js';
 import { createRenderer } from './canvas.js';
 import { createPencil } from './pencil.js';
 import { createFloatingToolbar } from './toolbar.js';
+import { createLayout } from './layout.js';
 import { createHistoryWindow } from './history.js';
 import { createLayersWindow } from './layers.js';
 import { createTimelineWindow, createPlayback, DEFAULT_FPS } from './timeline.js';
@@ -35,10 +36,35 @@ const ui = {
 };
 
 function updateZoom(v) {
-  ui.zoom.textContent = `${Math.round((v.scale * 100) / (window.devicePixelRatio || 1))}%`;
+  const pct = Math.round((v.scale * 100) / (window.devicePixelRatio || 1));
+  ui.zoom.textContent = `${pct}%`;
+  ui.zoom.title = `Zoom ${pct}%`;
 }
 
-const view = createRenderer(ui.stage, doc, { onChangeView: updateZoom });
+// `layout` nasce depois do renderer (o layout precisa do rect do sprite), então o fit
+// inicial roda sem obstáculos e é refeito quando os painéis abrem (ver `onChange`).
+let layout = null;
+
+const view = createRenderer(ui.stage, doc, {
+  onChangeView: updateZoom,
+  fitObstacles: () => layout?.obstacles() ?? [],
+});
+
+// Layout de spawn: o retângulo do sprite na tela (view está em device px → divide pelo
+// dpr) é obstáculo, junto com a toolbar e os painéis abertos. Cada painel tem um lado
+// preferido; o layout empilha nas faixas livres sem sobrepor nada (src/layout.js).
+// `onChange` reajusta o fit: painel que abre/fecha/muda de altura libera ou toma espaço,
+// e o sprite cresce até o maior retângulo livre (sem nunca ficar sob a UI).
+layout = createLayout({
+  toolbarEl: ui.toolbar,
+  spriteRect: () => {
+    const dpr = window.devicePixelRatio || 1;
+    const { tx, ty, scale } = view.view;
+    return { x: tx / dpr, y: ty / dpr, width: doc.width * scale / dpr, height: doc.height * scale / dpr };
+  },
+  onChange: () => view.refit(),
+});
+const spawnSide = (side) => (el) => layout.spawn(el, side);
 
 // Cor compartilhada: lápis aplica via subscribe; balde lê rgba() no clique; conta-gotas
 // escreve no store (se a opção estiver ligada) e o lápis recebe pelo mesmo subscribe.
@@ -55,8 +81,7 @@ const toolbar = createFloatingToolbar(ui.toolbar);
 
 // Painel do histórico: lista os strokes (diffs) e permite saltar para qualquer ponto.
 const history = createHistoryWindow(doc, {
-  x: window.innerWidth - 280,
-  y: 150,
+  getPos: spawnSide('right'),
   onOpen: () => ui.winHistory.setAttribute('aria-pressed', 'true'),
   onClose: () => ui.winHistory.setAttribute('aria-pressed', 'false'),
 });
@@ -70,8 +95,7 @@ ui.winHistory.addEventListener('click', () => {
 // Painel de camadas: criar/remover/reordenar/ocultar/opacidade; as ops entram no
 // histórico como strokes estruturais (undo integrado via src/state.js).
 const layers = createLayersWindow(doc, {
-  x: window.innerWidth - 560,
-  y: 150,
+  getPos: spawnSide('right'),
   onOpen: () => ui.winLayers.setAttribute('aria-pressed', 'true'),
   onClose: () => ui.winLayers.setAttribute('aria-pressed', 'false'),
 });
@@ -88,8 +112,7 @@ ui.winLayers.addEventListener('click', () => {
 const playback = createPlayback(doc, { fps: DEFAULT_FPS });
 
 const timeline = createTimelineWindow(doc, playback, view, {
-  x: 12,
-  y: window.innerHeight - 240,
+  getPos: spawnSide('bottom'),
   onOpen: () => ui.winTimeline.setAttribute('aria-pressed', 'true'),
   onClose: () => ui.winTimeline.setAttribute('aria-pressed', 'false'),
 });
@@ -104,6 +127,7 @@ const stopPlaybackSubscription = playback.subscribe((state) => {
   ui.play.setAttribute('aria-pressed', String(state.playing));
   ui.play.title = state.playing ? 'Parar playback (A)' : 'Playback da animação (A)';
   ui.fps.textContent = `${state.fps} fps`;
+  ui.fps.title = `Playback a ${state.fps} fps`;
 });
 ui.play.addEventListener('click', () => playback.toggle());
 
@@ -111,8 +135,7 @@ ui.play.addEventListener('click', () => playback.toggle());
 // playback, e save/load do projeto em JSON. O save/load funciona com a janela fechada
 // (Ctrl+S / Ctrl+O), por isso as funções são expostas pelo módulo, não só pela UI.
 const exporter = createExportWindow(doc, view, playback, {
-  x: window.innerWidth - 560,
-  y: 470,
+  getPos: spawnSide('right'),
   onOpen: () => ui.winExport.setAttribute('aria-pressed', 'true'),
   onClose: () => ui.winExport.setAttribute('aria-pressed', 'false'),
 });
@@ -133,19 +156,19 @@ document.addEventListener(
 );
 
 // Janelas de opções das ferramentas (nível 1, sistema do passo 1.5/2): só a janela da
-// ferramenta ativa fica aberta; todas vivem na mesma posição (abrem uma por vez).
+// ferramenta ativa fica aberta; todas têm lado preferido à esquerda (abaixo da toolbar,
+// empilhadas pelo layout — abrem uma por vez, então nunca se sobrepõem).
 const tools = { pencil, eraser, bucket, dropper };
 const toolButtons = { pencil: ui.pencil, eraser: ui.eraser, bucket: ui.bucket, dropper: ui.dropper };
 const optionWindows = {
   pencil: null, // lápis não tem janela própria: usa a cor do seletor
-  eraser: createEraserWindow(eraser, { x: 12, y: 100 }),
-  bucket: createBucketWindow(bucket, { x: 12, y: 100 }),
-  dropper: createDropperWindow(dropper, { x: 12, y: 100 }),
+  eraser: createEraserWindow(eraser, { getPos: spawnSide('left') }),
+  bucket: createBucketWindow(bucket, { getPos: spawnSide('left') }),
+  dropper: createDropperWindow(dropper, { getPos: spawnSide('left') }),
 };
 
 const colorWin = createColorWindow(color, {
-  x: window.innerWidth - 280,
-  y: 470,
+  getPos: spawnSide('right'),
   onOpen: () => ui.winColor.setAttribute('aria-pressed', 'true'),
   onClose: () => ui.winColor.setAttribute('aria-pressed', 'false'),
 });
@@ -200,8 +223,10 @@ const stopDocSubscription = onChange(doc, () => {
   ui.undo.title = nextUndo ? `Desfazer: ${strokeSummary(doc, nextUndo)}` : 'Ctrl+Z';
   ui.redo.title = nextRedo ? `Refazer: ${strokeSummary(doc, nextRedo)}` : 'Ctrl+Shift+Z';
   ui.hist.textContent = `${doc.history.length}/${doc.historyLimit}`;
+  ui.hist.title = `Histórico: ${doc.history.length} de ${doc.historyLimit} strokes`;
   ui.frame.textContent = `${doc.frames.length} frame${doc.frames.length > 1 ? 's' : ''} · ` +
     `${doc.frame + 1}/${doc.frames.length} · ${doc.width}×${doc.height}`;
+  ui.frame.title = `Frame ${doc.frame + 1} de ${doc.frames.length} · ${doc.width}×${doc.height}`;
 });
 
 window.addEventListener('keydown', (ev) => {
@@ -265,6 +290,7 @@ window.addEventListener('keydown', (ev) => {
 window.addEventListener('pagehide', () => {
   view.destroy();
   toolbar.destroy();
+  layout.destroy();
   history.destroy();
   layers.destroy();
   timeline.destroy(); // fecha a janela → abort da signal → playback.stop()
@@ -279,7 +305,10 @@ window.addEventListener('pagehide', () => {
 ui.undo.disabled = true;
 ui.redo.disabled = true;
 ui.hist.textContent = `0/${doc.historyLimit}`;
+ui.hist.title = `Histórico: 0 de ${doc.historyLimit} strokes`;
 updateZoom(view.view);
 ui.frame.textContent = `1 frame · 1/1 · ${doc.width}×${doc.height}`;
+ui.frame.title = `Frame 1 de 1 · ${doc.width}×${doc.height}`;
 ui.fps.textContent = `${playback.fps()} fps`;
+ui.fps.title = `Playback a ${playback.fps()} fps`;
 ui.play.title = 'Playback da animação (A)';

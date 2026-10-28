@@ -1,23 +1,9 @@
-// src/toolbar.js — barra flutuante de ferramentas: sempre visível, arrastável pelo fundo.
-// Botões/inputs não iniciam arraste (reject) para não interferir nos clicks.
-import { createDraggable, place } from './windows.js';
-
-export function createFloatingToolbar(el) {
-  const life = new AbortController();
-  window.addEventListener(
-    'resize',
-    () => {
-      const rect = el.getBoundingClientRect();
-      place(el, rect.left, rect.top);
-    },
-    { signal: life.signal }
-  );
-  const drag = createDraggable(el, el, { reject: (t) => t.closest('button, input') });
-
+// src/toolbar.js — barra de ferramentas: sempre visível, fixa no centro do topo
+// (posicionada pelo CSS: left 50% + translateX(-50%)). Não é arrastável — a barra é
+// sempre o mesmo lugar e o layout de spawn (src/layout.js) a trata como obstáculo;
+// só os painéis movem (arraste pelo cabeçalho em windows.js).
+export function createFloatingToolbar() {
   return {
-    destroy() {
-      drag.destroy();
-      life.abort();
-    },
+    destroy() {},
   };
 }
