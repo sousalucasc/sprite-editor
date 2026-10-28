@@ -1,0 +1,472 @@
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #1b1b1b;
+  color: #d8d8d8;
+  font: 13px/1.4 system-ui, sans-serif;
+}
+
+#stage {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+}
+
+.toolbar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 30;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px;
+  background: #262626;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  cursor: move;
+  touch-action: none;
+}
+
+.toolbar button {
+  padding: 4px 8px;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #e6e6e6;
+  font: inherit;
+  cursor: pointer;
+}
+
+.toolbar button.active {
+  background: #4a6fa5;
+  border-color: #5b83c4;
+}
+
+.toolbar button[aria-pressed='true'] {
+  background: #4a6fa5;
+  border-color: #5b83c4;
+}
+
+.toolbar button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.toolbar input[type='color'] {
+  width: 32px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: 1px solid #444;
+}
+
+.readout {
+  min-width: 56px;
+  color: #9a9a9a;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.hint {
+  position: fixed;
+  bottom: 10px;
+  left: 12px;
+  margin: 0;
+  color: #7d7d7d;
+  font-size: 12px;
+}
+
+/* Painéis flutuantes criados por src/windows.js. */
+.window {
+  position: fixed;
+  z-index: 40;
+  min-width: 200px;
+  max-width: 300px;
+  background: #262626;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.window[hidden] {
+  display: none;
+}
+
+.window-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3c3c3c;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.window-level {
+  margin-left: auto;
+  color: #8fa3c8;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.window-close {
+  padding: 0 6px;
+  background: none;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e6e6e6;
+  font: inherit;
+  cursor: pointer;
+}
+
+.window-close:hover {
+  background: #4a6fa5;
+  border-color: #5b83c4;
+}
+
+.window-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+}
+
+.window-body button {
+  padding: 4px 8px;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #e6e6e6;
+  font: inherit;
+  cursor: pointer;
+}
+
+.window-note {
+  margin: 0;
+  color: #9a9a9a;
+  font-size: 12px;
+}
+
+/* Janelas de opções criadas por src/tools/*.js (borracha, balde, conta-gotas, cor). */
+.option-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #9a9a9a;
+  font-size: 12px;
+}
+
+.option-row input[type='range'] {
+  flex: 1;
+  accent-color: #5b83c4;
+}
+
+.option-row input[type='radio'],
+.option-row input[type='checkbox'] {
+  margin: 0;
+  accent-color: #5b83c4;
+}
+
+.window-body input[type='color'] {
+  width: 36px;
+  height: 26px;
+  padding: 0;
+  background: none;
+  border: 1px solid #444;
+}
+
+.hex-field {
+  width: 84px;
+  padding: 2px 4px;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e6e6e6;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.swatches button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.swatches button:hover {
+  border-color: #5b83c4;
+}
+
+.swatch-preview {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #9a9a9a;
+  font-size: 12px;
+}
+
+.swatch-preview .chip {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #444;
+  border-radius: 3px;
+  background: #fff;
+}
+
+/* Painel do histórico criado por src/history.js. */
+.history-limit {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #9a9a9a;
+  font-size: 12px;
+}
+
+.history-limit input {
+  width: 56px;
+  padding: 2px 4px;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e6e6e6;
+  font: inherit;
+}
+
+.history-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.history-item button {
+  width: 100%;
+  padding: 3px 6px;
+  background: #2f2f2f;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  color: #c8c8c8;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item button:hover {
+  background: #4a6fa5;
+  border-color: #5b83c4;
+  color: #fff;
+}
+
+.history-item.undone button {
+  color: #7d7d7d;
+}
+
+.history-current {
+  padding: 3px 6px;
+  border-left: 2px solid #5b83c4;
+  color: #8fa3c8;
+  font-size: 12px;
+}
+
+/* Painel de camadas criado por src/layers.js. */
+.layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.layer-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 3px 4px;
+  background: #2f2f2f;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.layer-row.active {
+  background: #33405a;
+  border-color: #5b83c4;
+}
+
+.layer-row .layer-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #c8c8c8;
+  font-size: 12px;
+}
+
+.layer-row.active .layer-name {
+  color: #fff;
+}
+
+.layer-eye {
+  width: 22px;
+  padding: 2px 0;
+  text-align: center;
+}
+
+.layer-eye[aria-pressed='true'] {
+  color: #8fa3c8;
+  border-color: #5b83c4;
+}
+
+.layer-opacity {
+  width: 56px;
+  accent-color: #5b83c4;
+}
+
+.layer-pct {
+  min-width: 34px;
+  color: #9a9a9a;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.layer-row button {
+  padding: 2px 5px;
+  font-size: 11px;
+}
+
+.layer-row button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Timeline de frames, playback e onion criados por src/timeline.js. */
+.tl-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tl-play {
+  min-width: 30px;
+}
+
+.tl-play[aria-pressed='true'] {
+  background: #4a6fa5;
+  border-color: #5b83c4;
+}
+
+.tl-range {
+  flex: 1;
+  min-width: 60px;
+  accent-color: #5b83c4;
+}
+
+.tl-val {
+  min-width: 46px;
+  color: #9a9a9a;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.frame-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.frame-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 3px 4px;
+  background: #2f2f2f;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.frame-row.active {
+  background: #33405a;
+  border-color: #5b83c4;
+}
+
+.frame-idx {
+  min-width: 22px;
+  color: #8fa3c8;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.frame-row.active .frame-idx {
+  color: #cfd8ee;
+}
+
+.frame-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #c8c8c8;
+  font-size: 12px;
+}
+
+.frame-row.active .frame-name {
+  color: #fff;
+}
+
+.frame-del {
+  padding: 2px 5px;
+  font-size: 11px;
+}
+
+.frame-del:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Janela de exportação criada por src/export.js. */
+.window-sep {
+  border-top: 1px solid #3c3c3c;
+  margin: 2px 0;
+}
+
+.window-body input[type='file'] {
+  display: none; /* o botão "Abrir" chama fileInput.click(); o input não ocupa espaço */
+}
+
+.window-body button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

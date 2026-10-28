@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aseclone — editor de pixel art</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <canvas id="stage"></canvas>
+
+    <div class="toolbar" role="toolbar" aria-label="Ferramentas">
+      <button id="tool-pencil" aria-pressed="true" title="Pencil (P)">Lápis</button>
+      <button id="tool-eraser" aria-pressed="false" title="Borracha (E)">Borracha</button>
+      <button id="tool-bucket" aria-pressed="false" title="Balde (B)">Balde</button>
+      <button id="tool-dropper" aria-pressed="false" title="Conta-gotas (I)">Conta-gotas</button>
+      <button id="win-color" aria-pressed="false" title="Seletor de cor (C)">Cor</button>
+      <button id="win-demo" aria-pressed="true" title="Painel de exemplo">Painel</button>
+      <button id="undo" title="Ctrl+Z" disabled>Desfazer</button>
+      <button id="redo" title="Ctrl+Shift+Z" disabled>Refazer</button>
+      <button id="win-history" aria-pressed="true" title="Histórico (Ctrl+H)">Histórico</button>
+      <button id="win-layers" aria-pressed="true" title="Camadas (L)">Camadas</button>
+      <button id="win-timeline" aria-pressed="true" title="Frames (T)">Frames</button>
+      <button id="win-export" aria-pressed="false" title="Exportar (X)">Exportar</button>
+      <button id="play" aria-pressed="false" title="Playback da animação (A)">Play</button>
+      <span id="hist" class="readout"></span>
+      <span id="zoom" class="readout">100%</span>
+      <span id="frame" class="readout"></span>
+      <span id="fps" class="readout">12 fps</span>
+    </div>
+
+    <p class="hint">Scroll: zoom · Espaço ou botão do meio: pan · P/E/B/I: lápis/borracha/balde/conta-gotas · C: cor · L: camadas · T: frames · X: exportar · A: play/stop · Ctrl+Z / Ctrl+Shift+Z: desfazer/refazer · Ctrl+H: histórico · Ctrl+S / Ctrl+O: salvar/abrir JSON · Arraste a barra pelo fundo e os painéis pelo cabeçalho</p>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
