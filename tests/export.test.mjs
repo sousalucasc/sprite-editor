@@ -102,6 +102,7 @@ function parseGif(bytes) {
   const width = u16();
   const height = u16();
   const packed = u8();
+  u8(); // background color index
   u8(); // pixel aspect ratio
   assert.ok(packed & 0x80, 'tabela global de cores presente');
   const tableSize = 2 ** ((packed & 7) + 1);
@@ -146,7 +147,7 @@ function parseGif(bytes) {
       continue;
     }
 
-    assert.equal(marker, 0x2a, 'image descriptor esperado');
+    assert.equal(marker, 0x2c, 'image separator esperado');
     const left = u16();
     const top = u16();
     const w = u16();

@@ -137,6 +137,11 @@ export function lzwEncode(indices, minCodeSize) {
     prefix = byte;
   }
   emit(prefix);
+  // A mesma checagem de largura vale para o código final: ao ler o último código de dados o
+  // decoder cria a última entrada e aumenta a largura ANTES de ler o `end`. Sem isso o `end`
+  // sai com 1 bit a menos, o bit stream desalinha e decoders reais (Paint/GDI+, navegadores)
+  // rejeitam o arquivo.
+  if (next === (1 << codeSize) && codeSize < MAX_CODE_SIZE) codeSize += 1;
   emit(end);
   if (shift > 0) bytes.push(acc & 255);
   return Uint8Array.from(bytes);
@@ -178,8 +183,10 @@ export function encodeGif(images, { width = 1, height = 1, scale = 1, delayMs = 
   pushU16(W);
   pushU16(H);
   // packed: global color table flag (bit 7), color resolution (bits 6-4), sort (bit 3),
-  // tamanho da tabela (bits 2-0) onde o tamanho real é 2^(campo+1)
-  push(0x80 | ((tableBits - 1) << 4) | (tableBits - 1), 0); // + pixel aspect ratio
+  // tamanho da tabela (bits 2-0) onde o tamanho real é 2^(campo+1).
+  // Depois do packed vêm DOIS bytes: background color index e pixel aspect ratio (0 = não
+  // especificado). Faltar o aspect ratio desalinha a paleta e o arquivo inteiro.
+  push(0x80 | ((tableBits - 1) << 4) | (tableBits - 1), 0, 0);
   for (let i = 0; i < tableSize; i++) {
     const key = palette[i] ?? 0; // entradas além das cores usadas ficam pretas
     push((key >> 16) & 255, (key >> 8) & 255, key & 255);
@@ -201,7 +208,7 @@ export function encodeGif(images, { width = 1, height = 1, scale = 1, delayMs = 
     pushU16(delay);
     push(transparentIndex, 0x00); // índice transparente + block terminator
 
-    push(0x2a); // image descriptor
+    push(0x2c); // image separator (a spec usa 0x2c, não 0x2a)
     pushU16(0);
     pushU16(0);
     pushU16(W);

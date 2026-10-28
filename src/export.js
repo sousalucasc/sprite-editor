@@ -196,6 +196,7 @@ export function createExportWindow(doc, view, playback, { x = 12, y = 100, onOpe
     scaleInput.addEventListener('input', () => {
       setScale(Number(scaleInput.value));
       scaleVal.textContent = `${scale}x`;
+      render(); // a nota mostra a escala e o estado do botão GIF
     }, { signal: win.signal });
 
     const sep = document.createElement('div');
@@ -211,9 +212,10 @@ export function createExportWindow(doc, view, playback, { x = 12, y = 100, onOpe
 
     function render() {
       const fps = playback.fps();
+      const hint = doc.frames.length < 2 ? ' · GIF precisa de 2+ frames' : '';
       readout.textContent =
         `${doc.width}×${doc.height} · ${doc.frames.length} frame(s) · frame ativo ${doc.frame + 1} · ` +
-        `GIF a ${fps} fps · escala ${scale}x`;
+        `GIF a ${fps} fps · escala ${scale}x${hint}`;
       if (document.activeElement !== scaleInput) scaleInput.value = String(scale);
       scaleVal.textContent = `${scale}x`;
       gifBtn.disabled = doc.frames.length < 2;
