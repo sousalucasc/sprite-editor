@@ -1,17 +1,23 @@
-:root {
-  color-scheme: dark;
-}
+/* styles.css — toda cor/espaçamento/raio/sombra/fonte vem de styles/tokens.css.
+   Nenhum valor literal de paleta aqui: mudar o visual = mudar os tokens. */
 
 html,
 body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: #1b1b1b;
-  color: #d8d8d8;
-  font: 13px/1.4 system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font: var(--fs-md)/var(--text-leading) var(--font-ui);
 }
 
+/* Controles com tamanho exato: borda e padding dentro da caixa (botão 28×28, × 20×20). */
+button,
+input {
+  box-sizing: border-box;
+}
+
+/* O canvas é o espaço principal: ocupa o viewport inteiro, sem margem. */
 #stage {
   display: block;
   width: 100vw;
@@ -19,80 +25,145 @@ body {
   touch-action: none;
 }
 
+/* Barra flutuante (src/toolbar.js arrasta pelo fundo; botões/inputs não arrastam). */
 .toolbar {
   position: fixed;
-  top: 12px;
-  left: 12px;
+  top: var(--space-4);
+  left: var(--space-4);
   z-index: 30;
   display: flex;
-  gap: 6px;
+  gap: var(--space-2);
   align-items: center;
-  padding: 6px;
-  background: #262626;
-  border: 1px solid #3c3c3c;
-  border-radius: 8px;
+  padding: var(--space-2);
+  background: color-mix(in oklab, var(--surface) 86%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), var(--hairline-top);
+  backdrop-filter: blur(12px) saturate(1.15);
   cursor: move;
   touch-action: none;
 }
 
-.toolbar button {
-  padding: 4px 8px;
-  background: #333;
-  border: 1px solid #444;
-  border-radius: 6px;
-  color: #e6e6e6;
-  font: inherit;
-  cursor: pointer;
+.tb-group {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
 }
 
-.toolbar button.active {
-  background: #4a6fa5;
-  border-color: #5b83c4;
+.tb-sep {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  background: var(--border);
 }
 
-.toolbar button[aria-pressed='true'] {
-  background: #4a6fa5;
-  border-color: #5b83c4;
-}
-
-.toolbar button:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.toolbar input[type='color'] {
-  width: 32px;
-  height: 24px;
+/* Botões só com ícone Lucide inline: o `title` e o `aria-label` dão o nome. */
+.tb-btn {
+  width: var(--control-h);
+  height: var(--control-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
-  background: none;
-  border: 1px solid #444;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.tb-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.tb-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.tb-btn.active,
+.tb-btn[aria-pressed='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.tb-btn.active:hover,
+.tb-btn[aria-pressed='true']:hover {
+  color: var(--accent-hover);
+  border-color: var(--accent);
+}
+
+.tb-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: transparent;
+  color: var(--text-faint);
+}
+
+.icon {
+  flex: none;
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+
+/* Play/stop: o ícone mostrado é decidido pelo `aria-pressed`, que src/main.js mantém
+   pela assinatura do playback — nada de lógica aqui. */
+.tb-play .ic-stop {
+  display: none;
+}
+
+#play[aria-pressed='true'] .ic-play {
+  display: none;
+}
+
+#play[aria-pressed='true'] .ic-stop {
+  display: inline-block;
+}
+
+/* Readouts de estado: mono tabular, discreto, à direita da barra. */
+.tb-readouts {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding-inline: var(--space-2);
 }
 
 .readout {
-  min-width: 56px;
-  color: #9a9a9a;
+  color: var(--text-faint);
+  font: var(--fs-xs)/1 var(--font-mono);
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  white-space: nowrap;
 }
 
+/* Hint de atalhos: pointer-events: none deixa pintar qualquer região da tela,
+   inclusive esta faixa (antes o <p> interceptava o pointerdown no canvas). */
 .hint {
   position: fixed;
-  bottom: 10px;
-  left: 12px;
+  bottom: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
   margin: 0;
-  color: #7d7d7d;
-  font-size: 12px;
+  max-width: min(70ch, calc(100vw - var(--space-6)));
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  text-align: center;
+  pointer-events: none;
 }
 
-/* Painéis flutuantes criados por src/windows.js. */
+/* ---- Painéis flutuantes criados por src/windows.js ---- */
 .window {
   position: fixed;
   z-index: 40;
-  min-width: 200px;
-  max-width: 300px;
-  background: #262626;
-  border: 1px solid #3c3c3c;
-  border-radius: 8px;
+  min-width: var(--panel-min);
+  max-width: var(--panel-max);
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), var(--hairline-top);
+  backdrop-filter: blur(12px) saturate(1.15);
   overflow: hidden;
 }
 
@@ -100,373 +171,405 @@ body {
   display: none;
 }
 
+/* Cabeçalho = área de arraste (createDraggable no header). */
 .window-header {
   display: flex;
-  gap: 8px;
+  gap: var(--space-3);
   align-items: center;
-  padding: 6px 8px;
-  background: #2d2d2d;
-  border-bottom: 1px solid #3c3c3c;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
   cursor: move;
   touch-action: none;
   user-select: none;
 }
 
+/* O título é criado por windows.js sem classe: estiliza o primeiro span do cabeçalho. */
+.window-header > span:first-child {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .window-level {
   margin-left: auto;
-  color: #8fa3c8;
-  font-size: 11px;
+  color: var(--text-faint);
+  font: var(--fs-xs)/1 var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
 .window-close {
-  padding: 0 6px;
-  background: none;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #e6e6e6;
-  font: inherit;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--text-faint);
+  font: var(--fs-sm)/1 var(--font-mono);
   cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .window-close:hover {
-  background: #4a6fa5;
-  border-color: #5b83c4;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.window-close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .window-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
 }
 
 .window-body button {
-  padding: 4px 8px;
-  background: #333;
-  border: 1px solid #444;
-  border-radius: 6px;
-  color: #e6e6e6;
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
   font: inherit;
   cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.window-body button:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+.window-body button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.window-body button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Glifos usados pelas UIs (× ↑ ↓ ● ○ ▶ ■): só eles em mono, para ficarem alinhados.
+   Os botões de texto do corpo (--font-ui via `font: inherit`) não mudam. As classes
+   precisam de `.window-body` na frente para vencer a regra `font: inherit` do corpo. */
+.window-close,
+.window-body .layer-row button,
+.window-body .frame-del,
+.window-body .tl-play {
+  font-family: var(--font-mono);
 }
 
 .window-note {
   margin: 0;
-  color: #9a9a9a;
-  font-size: 12px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: var(--text-leading);
 }
 
-/* Janelas de opções criadas por src/tools/*.js (borracha, balde, conta-gotas, cor). */
-.option-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  color: #9a9a9a;
-  font-size: 12px;
-}
-
-.option-row input[type='range'] {
-  flex: 1;
-  accent-color: #5b83c4;
-}
-
-.option-row input[type='radio'],
-.option-row input[type='checkbox'] {
-  margin: 0;
-  accent-color: #5b83c4;
-}
-
-.window-body input[type='color'] {
-  width: 36px;
-  height: 26px;
-  padding: 0;
-  background: none;
-  border: 1px solid #444;
-}
-
-.hex-field {
-  width: 84px;
-  padding: 2px 4px;
-  background: #333;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #e6e6e6;
-  font: inherit;
-  font-variant-numeric: tabular-nums;
-}
-
-.swatches {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.swatches button {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 1px solid #444;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.swatches button:hover {
-  border-color: #5b83c4;
-}
-
-.swatch-preview {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  color: #9a9a9a;
-  font-size: 12px;
-}
-
-.swatch-preview .chip {
-  width: 18px;
-  height: 18px;
-  border: 1px solid #444;
-  border-radius: 3px;
-  background: #fff;
-}
-
-/* Painel do histórico criado por src/history.js. */
-.history-limit {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  color: #9a9a9a;
-  font-size: 12px;
-}
-
-.history-limit input {
-  width: 56px;
-  padding: 2px 4px;
-  background: #333;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #e6e6e6;
-  font: inherit;
-}
-
-.history-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 200px;
-  overflow: auto;
-}
-
-.history-item button {
-  width: 100%;
-  padding: 3px 6px;
-  background: #2f2f2f;
-  border: 1px solid #3c3c3c;
-  border-radius: 4px;
-  color: #c8c8c8;
-  font: inherit;
-  cursor: pointer;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.history-item button:hover {
-  background: #4a6fa5;
-  border-color: #5b83c4;
-  color: #fff;
-}
-
-.history-item.undone button {
-  color: #7d7d7d;
-}
-
-.history-current {
-  padding: 3px 6px;
-  border-left: 2px solid #5b83c4;
-  color: #8fa3c8;
-  font-size: 12px;
-}
-
-/* Painel de camadas criado por src/layers.js. */
-.layer-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 200px;
-  overflow: auto;
-}
-
-.layer-row {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  padding: 3px 4px;
-  background: #2f2f2f;
-  border: 1px solid #3c3c3c;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.layer-row.active {
-  background: #33405a;
-  border-color: #5b83c4;
-}
-
-.layer-row .layer-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: #c8c8c8;
-  font-size: 12px;
-}
-
-.layer-row.active .layer-name {
-  color: #fff;
-}
-
-.layer-eye {
-  width: 22px;
-  padding: 2px 0;
-  text-align: center;
-}
-
-.layer-eye[aria-pressed='true'] {
-  color: #8fa3c8;
-  border-color: #5b83c4;
-}
-
-.layer-opacity {
-  width: 56px;
-  accent-color: #5b83c4;
-}
-
-.layer-pct {
-  min-width: 34px;
-  color: #9a9a9a;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.layer-row button {
-  padding: 2px 5px;
-  font-size: 11px;
-}
-
-.layer-row button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-/* Timeline de frames, playback e onion criados por src/timeline.js. */
-.tl-controls {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.tl-play {
-  min-width: 30px;
-}
-
-.tl-play[aria-pressed='true'] {
-  background: #4a6fa5;
-  border-color: #5b83c4;
-}
-
-.tl-range {
-  flex: 1;
-  min-width: 60px;
-  accent-color: #5b83c4;
-}
-
-.tl-val {
-  min-width: 46px;
-  color: #9a9a9a;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.frame-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 160px;
-  overflow: auto;
-}
-
-.frame-row {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  padding: 3px 4px;
-  background: #2f2f2f;
-  border: 1px solid #3c3c3c;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.frame-row.active {
-  background: #33405a;
-  border-color: #5b83c4;
-}
-
-.frame-idx {
-  min-width: 22px;
-  color: #8fa3c8;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.frame-row.active .frame-idx {
-  color: #cfd8ee;
-}
-
-.frame-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: #c8c8c8;
-  font-size: 12px;
-}
-
-.frame-row.active .frame-name {
-  color: #fff;
-}
-
-.frame-del {
-  padding: 2px 5px;
-  font-size: 11px;
-}
-
-.frame-del:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-/* Janela de exportação criada por src/export.js. */
 .window-sep {
-  border-top: 1px solid #3c3c3c;
-  margin: 2px 0;
+  border-top: 1px solid var(--border);
+  margin: var(--space-1) 0;
 }
 
 .window-body input[type='file'] {
   display: none; /* o botão "Abrir" chama fileInput.click(); o input não ocupa espaço */
 }
 
-.window-body button:disabled {
-  opacity: 0.4;
-  cursor: default;
+/* ---- Controles genéricos (inputs das janelas de opções, src/tools/*.js) ---- */
+.window-body input[type='color'],
+.toolbar input[type='color'] {
+  width: 36px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.hex-field,
+.history-limit input {
+  width: 84px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: var(--fs-sm)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.history-limit input {
+  width: 56px;
+}
+
+.hex-field:focus-visible,
+.history-limit input:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.option-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+
+.option-row input[type='range'] {
+  flex: 1;
+  min-width: 60px;
+  accent-color: var(--accent);
+}
+
+.option-row input[type='radio'],
+.option-row input[type='checkbox'] {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+/* Amostra de cor (seletor e conta-gotas): o fundo vem inline do store, só o envolvente é daqui. */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.swatches button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+
+.swatches button:hover {
+  border-color: var(--accent-line);
+}
+
+.swatch-preview {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+
+.swatch-preview .chip {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+}
+
+/* ---- Painel do histórico (src/history.js) ---- */
+.history-limit {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+
+.history-list,
+.layer-list,
+.frame-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 200px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.frame-list {
+  max-height: 160px;
+}
+
+.history-item button {
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font: var(--fs-sm)/1 var(--font-mono);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.history-item button:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.history-item.undone button {
+  color: var(--text-faint);
+}
+
+.history-current {
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid var(--accent-line);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+
+/* ---- Painel de camadas (src/layers.js) ---- */
+.layer-row,
+.frame-row {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  min-height: var(--row-h);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.layer-row:hover,
+.frame-row:hover {
+  background: var(--surface-hover);
+}
+
+.layer-row.active,
+.frame-row.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+
+.layer-row:focus-visible,
+.frame-row:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.layer-name,
+.frame-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.layer-row.active .layer-name,
+.frame-row.active .frame-name {
+  color: var(--text);
+}
+
+.layer-eye {
+  width: 22px;
+  padding: var(--space-1) 0;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+.layer-eye[aria-pressed='true'] {
+  color: var(--accent);
+  border-color: var(--accent-line);
+}
+
+.layer-opacity {
+  width: 56px;
+  accent-color: var(--accent);
+}
+
+.layer-pct {
+  min-width: 34px;
+  color: var(--text-faint);
+  font: var(--fs-xs)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.layer-row button,
+.frame-row button {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--fs-xs);
+}
+
+.frame-idx {
+  min-width: 22px;
+  color: var(--text-faint);
+  font: var(--fs-xs)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.frame-row.active .frame-idx {
+  color: var(--accent);
+}
+
+/* ---- Timeline: controles de playback e onion (src/timeline.js) ---- */
+.tl-controls {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.tl-play {
+  min-width: 30px;
+  padding-inline: var(--space-1);
+  text-align: center;
+}
+
+.tl-play[aria-pressed='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.tl-range {
+  flex: 1;
+  min-width: 60px;
+  accent-color: var(--accent);
+}
+
+.tl-val {
+  min-width: 46px;
+  color: var(--text-faint);
+  font: var(--fs-xs)/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tb-btn,
+  .window-body button,
+  .window-close,
+  .swatches button,
+  .history-item button,
+  .layer-row,
+  .frame-row {
+    transition: none;
+  }
 }

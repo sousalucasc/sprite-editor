@@ -1,0 +1,68 @@
+/* styles/tokens.css — design tokens do editor: a única fonte de verdade para cor,
+   espaçamento, raio, sombra e fonte. Nenhum valor literal deve aparecer em styles.css;
+   só as variáveis daqui (mudar a paleta = mudar este arquivo).
+   Paleta: fundo escuro neutro (slate) + destaque âmbar, para a UI não competir com a
+   cor que o usuário está pintando no canvas. */
+
+:root {
+  color-scheme: dark;
+
+  /* Cores — fundo e superfícies */
+  --bg: #141619;            /* fundo da tela: o canvas ocupa 100% do viewport */
+  --surface: #1b1e23;       /* painéis e toolbar flutuantes */
+  --surface-raised: #232830; /* hovers, inputs, linhas de lista */
+  --surface-hover: #2c323b;  /* feedback de hover em botões e linhas */
+  --border: #2b313a;        /* hairlines estruturais */
+  --border-strong: #3d4653; /* borda de controle e itens ativos */
+
+  /* Cores — texto */
+  --text: #e7eaef;          /* texto primário */
+  --text-muted: #99a2ae;    /* rótulos, notas, readouts */
+  --text-faint: #6c7583;    /* texto desabilitado / hints */
+  --text-invert: #12151a;   /* texto sobre o destaque */
+
+  /* Cores — destaque (âmbar) */
+  --accent: #f5a34d;
+  --accent-hover: #ffb877;
+  --accent-soft: rgba(245, 163, 77, 0.14);  /* fundo de item ativo/pressionado */
+  --accent-line: rgba(245, 163, 77, 0.55);  /* borda/foco de item ativo */
+  --accent-track: rgba(245, 163, 77, 0.3);  /* trilhos de slider e barras */
+
+  /* Espaçamento — escala de 4px */
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 24px;
+
+  /* Raio — cantos arredondados, do menor (controle) ao maior (painel) */
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  /* Sombra — suave, sem hard shadow; a fonte vem da tela escura */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 6px 18px -6px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 14px 34px -10px rgba(0, 0, 0, 0.7);
+  --hairline-top: inset 0 1px 0 rgba(255, 255, 255, 0.05); /* brilho sutil no topo */
+
+  /* Foco visível (mesmo token para teclado e hover) */
+  --focus-ring: 0 0 0 2px var(--accent-line);
+
+  /* Fonte */
+  --font-ui: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --text-leading: 1.45;
+
+  /* Dimensões de UI */
+  --icon-size: 16px;
+  --control-h: 28px;      /* altura dos botões da toolbar e das janelas */
+  --row-h: 26px;          /* altura de uma linha de camada/frame na lista */
+  --panel-min: 216px;
+  --panel-max: 320px;
+}
